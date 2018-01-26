@@ -114,7 +114,8 @@ def run(args):
 
     crash_handler = crashsignal.CrashHandler(
         app=qApp, quitter=quitter, args=args, parent=qApp)
-    crash_handler.activate()
+    # crash_handler.activate()
+    # Disable crash dialog. REVERT THIS #########################################################################################
     objreg.register('crash-handler', crash_handler)
 
     signal_handler = crashsignal.SignalHandler(app=qApp, quitter=quitter,
