@@ -103,12 +103,12 @@ def _find_prevnext(prev, elems):
     return None
 
 
-def prevnext(*, browsertab, win_id, baseurl, prev=False,
+def prevnext(*, browserpane, win_id, baseurl, prev=False,
              tab=False, background=False, window=False):
     """Click a "previous"/"next" element on the page.
 
     Args:
-        browsertab: The WebKitTab/WebEngineTab of the page.
+        browserpane: The WebKitTab/WebEngineTab of the page.
         baseurl: The base URL of the current tab.
         prev: True to open a "previous" link, False to open a "next" link.
         tab: True to open in a new tab, False for the current tab.
@@ -145,7 +145,7 @@ def prevnext(*, browsertab, win_id, baseurl, prev=False,
         elif tab:
             cur_tabbed_browser.tabopen(url, background=background)
         else:
-            browsertab.openurl(url)
+            browserpane.openurl(url)
 
-    browsertab.elements.find_css(webelem.SELECTORS[webelem.Group.links],
+    browserpane.elements.find_css(webelem.SELECTORS[webelem.Group.links],
                                  _prevnext_cb)

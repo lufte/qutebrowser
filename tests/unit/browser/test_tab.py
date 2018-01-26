@@ -19,7 +19,7 @@
 
 import pytest
 
-from qutebrowser.browser import browsertab
+from qutebrowser.browser import browserpane
 from qutebrowser.utils import utils
 
 pytestmark = pytest.mark.usefixtures('redirect_webengine_data')
@@ -48,12 +48,12 @@ def view(qtbot, config_stub, request):
 @pytest.fixture(params=['webkit', 'webengine'])
 def tab(request, qtbot, tab_registry, cookiejar_and_cache, mode_manager):
     if request.param == 'webkit':
-        webkittab = pytest.importorskip('qutebrowser.browser.webkit.webkittab')
-        tab_class = webkittab.WebKitTab
+        webkitpane = pytest.importorskip('qutebrowser.browser.webkit.webkitpane')
+        tab_class = webkitpane.WebKitTab
     elif request.param == 'webengine':
-        webenginetab = pytest.importorskip(
-            'qutebrowser.browser.webengine.webenginetab')
-        tab_class = webenginetab.WebEngineTab
+        webenginepane = pytest.importorskip(
+            'qutebrowser.browser.webengine.webenginepane')
+        tab_class = webenginepane.WebEngineTab
     else:
         raise utils.Unreachable
 
@@ -62,7 +62,7 @@ def tab(request, qtbot, tab_registry, cookiejar_and_cache, mode_manager):
     yield t
 
 
-class Zoom(browsertab.AbstractZoom):
+class Zoom(browserpane.AbstractZoom):
 
     def _set_factor_internal(self, _factor):
         pass
@@ -71,23 +71,23 @@ class Zoom(browsertab.AbstractZoom):
         raise utils.Unreachable
 
 
-class Tab(browsertab.AbstractTab):
+class Tab(browserpane.AbstractTab):
 
     # pylint: disable=abstract-method
 
     def __init__(self, win_id, mode_manager, parent=None):
         super().__init__(win_id=win_id, mode_manager=mode_manager,
                          parent=parent)
-        self.history = browsertab.AbstractHistory(self)
-        self.scroller = browsertab.AbstractScroller(self, parent=self)
-        self.caret = browsertab.AbstractCaret(win_id=self.win_id,
+        self.history = browserpane.AbstractHistory(self)
+        self.scroller = browserpane.AbstractScroller(self, parent=self)
+        self.caret = browserpane.AbstractCaret(win_id=self.win_id,
                                               mode_manager=mode_manager,
                                               tab=self, parent=self)
         self.zoom = Zoom(win_id=self.win_id)
-        self.search = browsertab.AbstractSearch(parent=self)
-        self.printing = browsertab.AbstractPrinting()
-        self.elements = browsertab.AbstractElements(self)
-        self.action = browsertab.AbstractAction()
+        self.search = browserpane.AbstractSearch(parent=self)
+        self.printing = browserpane.AbstractPrinting()
+        self.elements = browserpane.AbstractElements(self)
+        self.action = browserpane.AbstractAction()
 
     def _install_event_filter(self):
         pass

@@ -29,7 +29,7 @@ from PyQt5.QtGui import QIcon
 from qutebrowser.config import config
 from qutebrowser.keyinput import modeman
 from qutebrowser.mainwindow import tabwidget, mainwindow
-from qutebrowser.browser import signalfilter, browsertab
+from qutebrowser.browser import signalfilter, browserpane
 from qutebrowser.utils import (log, usertypes, utils, qtutils, objreg,
                                urlutils, message, jinja)
 
@@ -106,8 +106,8 @@ class TabbedBrowser(tabwidget.TabWidget):
     cur_fullscreen_requested = pyqtSignal(bool)
     close_window = pyqtSignal()
     resized = pyqtSignal('QRect')
-    current_tab_changed = pyqtSignal(browsertab.AbstractTab)
-    new_tab = pyqtSignal(browsertab.AbstractTab, int)
+    current_tab_changed = pyqtSignal(browserpane.AbstractTab)
+    new_tab = pyqtSignal(browserpane.AbstractTab, int)
 
     def __init__(self, *, win_id, private, parent=None):
         super().__init__(win_id, parent)
@@ -335,7 +335,7 @@ class TabbedBrowser(tabwidget.TabWidget):
         elif add_undo:
             try:
                 history_data = tab.history.serialize()
-            except browsertab.WebTabError:
+            except browserpane.WebTabError:
                 pass  # special URL
             else:
                 entry = UndoEntry(tab.url(), history_data, idx,
@@ -410,7 +410,7 @@ class TabbedBrowser(tabwidget.TabWidget):
         self.tab_close_prompt_if_pinned(
             tab, False, lambda: self.close_tab(tab))
 
-    @pyqtSlot(browsertab.AbstractTab)
+    @pyqtSlot(browserpane.AbstractTab)
     def on_window_close_requested(self, widget):
         """Close a tab with a widget given."""
         try:
@@ -462,7 +462,7 @@ class TabbedBrowser(tabwidget.TabWidget):
             return tabbed_browser.tabopen(url=url, background=background,
                                           related=related)
 
-        tab = browsertab.create(win_id=self._win_id, private=self.private,
+        tab = browserpane.create(win_id=self._win_id, private=self.private,
                                 parent=self)
         self._connect_tab_signals(tab)
 
@@ -566,7 +566,7 @@ class TabbedBrowser(tabwidget.TabWidget):
         modeman.leave(self._win_id, usertypes.KeyMode.hint, 'load started',
                       maybe=True)
 
-    @pyqtSlot(browsertab.AbstractTab, str)
+    @pyqtSlot(browserpane.AbstractTab, str)
     def on_title_changed(self, tab, text):
         """Set the title of a tab.
 
@@ -590,7 +590,7 @@ class TabbedBrowser(tabwidget.TabWidget):
         if idx == self.currentIndex():
             self._update_window_title()
 
-    @pyqtSlot(browsertab.AbstractTab, QUrl)
+    @pyqtSlot(browserpane.AbstractTab, QUrl)
     def on_url_changed(self, tab, url):
         """Set the new URL as title if there's no title yet.
 
@@ -607,7 +607,7 @@ class TabbedBrowser(tabwidget.TabWidget):
         if not self.page_title(idx):
             self.set_page_title(idx, url.toDisplayString())
 
-    @pyqtSlot(browsertab.AbstractTab, QIcon)
+    @pyqtSlot(browserpane.AbstractTab, QIcon)
     def on_icon_changed(self, tab, icon):
         """Set the icon of a tab.
 
@@ -726,17 +726,17 @@ class TabbedBrowser(tabwidget.TabWidget):
 
     def _on_renderer_process_terminated(self, tab, status, code):
         """Show an error when a renderer process terminated."""
-        if status == browsertab.TerminationStatus.normal:
+        if status == browserpane.TerminationStatus.normal:
             return
 
         messages = {
-            browsertab.TerminationStatus.abnormal:
+            browserpane.TerminationStatus.abnormal:
                 "Renderer process exited with status {}".format(code),
-            browsertab.TerminationStatus.crashed:
+            browserpane.TerminationStatus.crashed:
                 "Renderer process crashed",
-            browsertab.TerminationStatus.killed:
+            browserpane.TerminationStatus.killed:
                 "Renderer process was killed",
-            browsertab.TerminationStatus.unknown:
+            browserpane.TerminationStatus.unknown:
                 "Renderer process did not start",
         }
         msg = messages[status]

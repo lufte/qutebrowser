@@ -62,7 +62,7 @@ class MouseEventFilter(QObject):
     """Handle mouse events on a tab.
 
     Attributes:
-        _tab: The browsertab object this filter is installed on.
+        _tab: The browserpane object this filter is installed on.
         _handlers: A dict of handler functions for the handled events.
         _ignore_wheel_event: Whether to ignore the next wheelEvent.
         _check_insertmode_on_release: Whether an insertmode check should be

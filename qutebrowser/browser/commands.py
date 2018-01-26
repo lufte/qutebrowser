@@ -35,7 +35,7 @@ import pygments.formatters
 
 from qutebrowser.commands import userscripts, cmdexc, cmdutils, runners
 from qutebrowser.config import config, configdata
-from qutebrowser.browser import (urlmarks, browsertab, inspector, navigate,
+from qutebrowser.browser import (urlmarks, browserpane, inspector, navigate,
                                  webelem, downloads)
 from qutebrowser.keyinput import modeman
 from qutebrowser.utils import (message, usertypes, log, qtutils, urlutils,
@@ -464,7 +464,7 @@ class CommandDispatcher:
                 tab.printing.check_printer_support()
             if preview:
                 tab.printing.check_preview_support()
-        except browsertab.WebTabError as e:
+        except browserpane.WebTabError as e:
             raise cmdexc.CommandError(e)
 
         if preview:
@@ -490,7 +490,7 @@ class CommandDispatcher:
         cur_title = self._tabbed_browser.page_title(self._current_index())
         try:
             history = curtab.history.serialize()
-        except browsertab.WebTabError as e:
+        except browserpane.WebTabError as e:
             raise cmdexc.CommandError(e)
 
         # The new tab could be in a new tabbed_browser (e.g. because of
@@ -590,7 +590,7 @@ class CommandDispatcher:
                 widget.history.forward(count)
             else:
                 widget.history.back(count)
-        except browsertab.WebTabError as e:
+        except browserpane.WebTabError as e:
             raise cmdexc.CommandError(e)
 
     @cmdutils.register(instance='command-dispatcher', scope='window')
@@ -672,7 +672,7 @@ class CommandDispatcher:
         try:
             if where in ['prev', 'next']:
                 handler = handlers[where]
-                handler(browsertab=widget, win_id=self._win_id, baseurl=url,
+                handler(browserpane=widget, win_id=self._win_id, baseurl=url,
                         tab=tab, background=bg, window=window)
             elif where in ['up', 'increment', 'decrement']:
                 new_url = handlers[where](url, count)
@@ -1274,7 +1274,7 @@ class CommandDispatcher:
             env['QUTE_SELECTED_TEXT'] = selection
             try:
                 env['QUTE_SELECTED_HTML'] = tab.caret.selection(html=True)
-            except browsertab.UnsupportedOperationError:
+            except browserpane.UnsupportedOperationError:
                 pass
 
         # FIXME:qtwebengine: If tab is None, run_async will fail!
@@ -1427,7 +1427,7 @@ class CommandDispatcher:
         """
         try:
             self._current_widget().caret.follow_selected(tab=tab)
-        except browsertab.WebTabError as e:
+        except browserpane.WebTabError as e:
             raise cmdexc.CommandError(str(e))
 
     @cmdutils.register(instance='command-dispatcher', name='inspector',
@@ -1487,7 +1487,7 @@ class CommandDispatcher:
                     'webengine-download-manager')
                 try:
                     webengine_download_manager.get_mhtml(tab, target)
-                except browsertab.UnsupportedOperationError as e:
+                except browserpane.UnsupportedOperationError as e:
                     raise cmdexc.CommandError(e)
             else:
                 download_manager.get_mhtml(tab, target)
@@ -2044,7 +2044,7 @@ class CommandDispatcher:
         for _ in range(count):
             try:
                 tab.action.run_string(action)
-            except browsertab.WebTabError as e:
+            except browserpane.WebTabError as e:
                 raise cmdexc.CommandError(str(e))
 
     @cmdutils.register(instance='command-dispatcher', scope='window',
@@ -2218,7 +2218,7 @@ class CommandDispatcher:
             tab = self._current_widget()
             try:
                 tab.action.exit_fullscreen()
-            except browsertab.UnsupportedOperationError:
+            except browserpane.UnsupportedOperationError:
                 pass
             return
 

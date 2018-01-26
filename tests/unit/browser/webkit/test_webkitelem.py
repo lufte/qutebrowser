@@ -29,7 +29,7 @@ import pytest
 from PyQt5.QtCore import QRect, QPoint, QUrl
 QWebElement = pytest.importorskip('PyQt5.QtWebKit').QWebElement
 
-from qutebrowser.browser import webelem, browsertab
+from qutebrowser.browser import webelem, browserpane
 from qutebrowser.browser.webkit import webkitelem
 from qutebrowser.misc import objects
 from qutebrowser.utils import usertypes
@@ -127,7 +127,7 @@ def get_webelem(geometry=None, frame=None, *, null=False, style=None,
         return style_dict[name]
 
     elem.styleProperty.side_effect = _style_property
-    tab = mock.Mock(autospec=browsertab.AbstractTab)
+    tab = mock.Mock(autospec=browserpane.AbstractTab)
     tab.is_deleted.return_value = False
     wrapped = webkitelem.WebKitElement(elem, tab=tab)
     return wrapped

@@ -151,7 +151,7 @@ class MainWindow(QWidget):
         """
         super().__init__(parent)
         # Late import to avoid a circular dependency
-        # - browsertab -> hints -> webelem -> mainwindow -> bar -> browsertab
+        # - browserpane -> hints -> webelem -> mainwindow -> bar -> browserpane
         from qutebrowser.mainwindow import tabbedbrowser
         from qutebrowser.mainwindow.statusbar import bar
 

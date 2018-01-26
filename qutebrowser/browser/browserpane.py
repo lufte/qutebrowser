@@ -50,11 +50,11 @@ def create(win_id, private, parent=None):
     # argument and to avoid circular imports.
     mode_manager = modeman.instance(win_id)
     if objects.backend == usertypes.Backend.QtWebEngine:
-        from qutebrowser.browser.webengine import webenginetab
-        tab_class = webenginetab.WebEngineTab
+        from qutebrowser.browser.webengine import webenginepane
+        tab_class = webenginepane.WebEngineTab
     else:
-        from qutebrowser.browser.webkit import webkittab
-        tab_class = webkittab.WebKitTab
+        from qutebrowser.browser.webkit import webkitpane
+        tab_class = webkitpane.WebKitTab
     return tab_class(win_id=win_id, mode_manager=mode_manager, private=private,
                      parent=parent)
 
@@ -62,8 +62,8 @@ def create(win_id, private, parent=None):
 def init():
     """Initialize backend-specific modules."""
     if objects.backend == usertypes.Backend.QtWebEngine:
-        from qutebrowser.browser.webengine import webenginetab
-        webenginetab.init()
+        from qutebrowser.browser.webengine import webenginepane
+        webenginepane.init()
 
 
 class WebTabError(Exception):

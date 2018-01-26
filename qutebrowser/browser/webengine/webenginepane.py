@@ -32,7 +32,7 @@ from PyQt5.QtNetwork import QAuthenticator
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWebEngineWidgets import QWebEnginePage, QWebEngineScript
 
-from qutebrowser.browser import browsertab, mouse, shared
+from qutebrowser.browser import browserpane, mouse, shared
 from qutebrowser.browser.webengine import (webview, webengineelem, tabhistory,
                                            interceptor, webenginequtescheme,
                                            webenginedownloads,
@@ -85,7 +85,7 @@ _JS_WORLD_MAP = {
 }
 
 
-class WebEngineAction(browsertab.AbstractAction):
+class WebEngineAction(browserpane.AbstractAction):
 
     """QtWebEngine implementations related to web actions."""
 
@@ -100,7 +100,7 @@ class WebEngineAction(browsertab.AbstractAction):
         self._widget.triggerPageAction(QWebEnginePage.SavePage)
 
 
-class WebEnginePrinting(browsertab.AbstractPrinting):
+class WebEnginePrinting(browserpane.AbstractPrinting):
 
     """QtWebEngine implementations related to printing."""
 
@@ -109,11 +109,11 @@ class WebEnginePrinting(browsertab.AbstractPrinting):
 
     def check_printer_support(self):
         if not hasattr(self._widget.page(), 'print'):
-            raise browsertab.WebTabError(
+            raise browserpane.WebTabError(
                 "Printing is unsupported with QtWebEngine on Qt < 5.8")
 
     def check_preview_support(self):
-        raise browsertab.WebTabError(
+        raise browserpane.WebTabError(
             "Print previews are unsupported with QtWebEngine")
 
     def to_pdf(self, filename):
@@ -125,7 +125,7 @@ class WebEnginePrinting(browsertab.AbstractPrinting):
         self._widget.page().print(printer, callback)
 
 
-class WebEngineSearch(browsertab.AbstractSearch):
+class WebEngineSearch(browserpane.AbstractSearch):
 
     """QtWebEngine implementations related to searching on the page.
 
@@ -196,7 +196,7 @@ class WebEngineSearch(browsertab.AbstractSearch):
         self._find(self.text, self._flags, result_cb, 'next_result')
 
 
-class WebEngineCaret(browsertab.AbstractCaret):
+class WebEngineCaret(browserpane.AbstractCaret):
 
     """QtWebEngine implementations related to moving the cursor/selection."""
 
@@ -286,7 +286,7 @@ class WebEngineCaret(browsertab.AbstractCaret):
 
     def selection(self, html=False, callback=None):
         if html:
-            raise browsertab.UnsupportedOperationError
+            raise browserpane.UnsupportedOperationError
         if qtutils.version_check('5.10'):
             callback(self._widget.selectedText())
         else:
@@ -342,7 +342,7 @@ class WebEngineCaret(browsertab.AbstractCaret):
             javascript.assemble('caret', command))
 
 
-class WebEngineScroller(browsertab.AbstractScroller):
+class WebEngineScroller(browserpane.AbstractScroller):
 
     """QtWebEngine implementations related to scrolling."""
 
@@ -451,7 +451,7 @@ class WebEngineScroller(browsertab.AbstractScroller):
         return self._at_bottom
 
 
-class WebEngineHistory(browsertab.AbstractHistory):
+class WebEngineHistory(browserpane.AbstractHistory):
 
     """QtWebEngine implementations related to page history."""
 
@@ -479,7 +479,7 @@ class WebEngineHistory(browsertab.AbstractHistory):
             # contain view-source.
             scheme = self._tab.url().scheme()
             if scheme in ['view-source', 'chrome']:
-                raise browsertab.WebTabError("Can't serialize special URL!")
+                raise browserpane.WebTabError("Can't serialize special URL!")
         return qtutils.serialize(self._history)
 
     def deserialize(self, data):
@@ -497,7 +497,7 @@ class WebEngineHistory(browsertab.AbstractHistory):
                     self._tab.scroller.to_point, cur_data['scroll-pos']))
 
 
-class WebEngineZoom(browsertab.AbstractZoom):
+class WebEngineZoom(browserpane.AbstractZoom):
 
     """QtWebEngine implementations related to zooming."""
 
@@ -505,7 +505,7 @@ class WebEngineZoom(browsertab.AbstractZoom):
         self._widget.setZoomFactor(factor)
 
 
-class WebEngineElements(browsertab.AbstractElements):
+class WebEngineElements(browserpane.AbstractElements):
 
     """QtWebEngine implemementations related to elements on the page."""
 
@@ -571,7 +571,7 @@ class WebEngineElements(browsertab.AbstractElements):
         self._tab.run_js_async(js_code, js_cb)
 
 
-class WebEngineTab(browsertab.AbstractTab):
+class WebEngineTab(browserpane.AbstractTab):
 
     """A QtWebEngine tab in the browser.
 
@@ -710,7 +710,7 @@ class WebEngineTab(browsertab.AbstractTab):
         return None
 
     def clear_ssl_errors(self):
-        raise browsertab.UnsupportedOperationError
+        raise browserpane.UnsupportedOperationError
 
     def key_press(self, key, modifier=Qt.NoModifier):
         press_evt = QKeyEvent(QEvent.KeyPress, key, modifier, 0, 0, 0)
@@ -827,15 +827,15 @@ class WebEngineTab(browsertab.AbstractTab):
 
         status_map = {
             QWebEnginePage.NormalTerminationStatus:
-                browsertab.TerminationStatus.normal,
+                browserpane.TerminationStatus.normal,
             QWebEnginePage.AbnormalTerminationStatus:
-                browsertab.TerminationStatus.abnormal,
+                browserpane.TerminationStatus.abnormal,
             QWebEnginePage.CrashedTerminationStatus:
-                browsertab.TerminationStatus.crashed,
+                browserpane.TerminationStatus.crashed,
             QWebEnginePage.KilledTerminationStatus:
-                browsertab.TerminationStatus.killed,
+                browserpane.TerminationStatus.killed,
             -1:
-                browsertab.TerminationStatus.unknown,
+                browserpane.TerminationStatus.unknown,
         }
         self.renderer_process_terminated.emit(status_map[status], exitcode)
 

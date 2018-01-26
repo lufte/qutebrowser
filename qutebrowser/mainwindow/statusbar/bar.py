@@ -24,7 +24,7 @@ import attr
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, pyqtProperty, Qt, QSize, QTimer
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QStackedLayout, QSizePolicy
 
-from qutebrowser.browser import browsertab
+from qutebrowser.browser import browserpane
 from qutebrowser.config import config
 from qutebrowser.utils import usertypes, log, objreg, utils
 from qutebrowser.mainwindow.statusbar import (backforward, command, progress,
@@ -338,7 +338,7 @@ class StatusBar(QWidget):
                         usertypes.KeyMode.passthrough]:
             self.set_mode_active(old_mode, False)
 
-    @pyqtSlot(browsertab.AbstractTab)
+    @pyqtSlot(browserpane.AbstractTab)
     def on_tab_changed(self, tab):
         """Notify sub-widgets when the tab has been changed."""
         self.url.on_tab_changed(tab)
