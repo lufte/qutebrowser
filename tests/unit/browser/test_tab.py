@@ -49,11 +49,11 @@ def view(qtbot, config_stub, request):
 def tab(request, qtbot, tab_registry, cookiejar_and_cache, mode_manager):
     if request.param == 'webkit':
         webkitpane = pytest.importorskip('qutebrowser.browser.webkit.webkitpane')
-        tab_class = webkitpane.WebKitTab
+        tab_class = webkitpane.WebKitPane
     elif request.param == 'webengine':
         webenginepane = pytest.importorskip(
             'qutebrowser.browser.webengine.webenginepane')
-        tab_class = webenginepane.WebEngineTab
+        tab_class = webenginepane.WebEnginePane
     else:
         raise utils.Unreachable
 
@@ -71,7 +71,7 @@ class Zoom(browserpane.AbstractZoom):
         raise utils.Unreachable
 
 
-class Tab(browserpane.AbstractTab):
+class Tab(browserpane.AbstractPane):
 
     # pylint: disable=abstract-method
 

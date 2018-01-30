@@ -246,7 +246,7 @@ class _Downloader:
     """A class to download whole websites.
 
     Attributes:
-        tab: The AbstractTab which contains the website that will be saved.
+        tab: The AbstractPane which contains the website that will be saved.
         target: DownloadTarget where the file should be downloaded to.
         writer: The MHTMLWriter object which is used to save the page.
         loaded_urls: A set of QUrls of finished asset downloads.

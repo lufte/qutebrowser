@@ -1747,7 +1747,7 @@ class CommandDispatcher:
 
         Args:
             found: Whether the text was found.
-            tab: The AbstractTab in which the search was made.
+            tab: The AbstractPane in which the search was made.
             old_scroll_pos: The scroll position (QPoint) before the search.
             options: The options (dict) the search was made with.
             text: The text searched for.

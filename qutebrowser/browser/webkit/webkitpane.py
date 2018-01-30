@@ -606,9 +606,9 @@ class WebKitElements(browserpane.AbstractElements):
         callback(elem)
 
 
-class WebKitTab(browserpane.AbstractTab):
+class WebKitPane(browserpane.AbstractPane):
 
-    """A QtWebKit tab in the browser."""
+    """A QtWebKit pane in the browser."""
 
     def __init__(self, *, win_id, mode_manager, private, parent=None):
         super().__init__(win_id=win_id, mode_manager=mode_manager,

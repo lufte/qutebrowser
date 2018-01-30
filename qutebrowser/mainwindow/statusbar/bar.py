@@ -339,7 +339,7 @@ class StatusBar(QWidget):
                         usertypes.KeyMode.passthrough]:
             self.set_mode_active(old_mode, False)
 
-    @pyqtSlot(browserpane.AbstractTab)
+    @pyqtSlot(browserpane.AbstractPane)
     def on_pane_changed(self, pane):
         """Notify sub-widgets when the pane has been changed."""
         self.url.on_pane_changed(pane)

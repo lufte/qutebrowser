@@ -229,9 +229,9 @@ class FakeWebTabHistory(browserpane.AbstractHistory):
         return self._can_go_forward
 
 
-class FakeWebTab(browserpane.AbstractTab):
+class FakeWebTab(browserpane.AbstractPane):
 
-    """Fake AbstractTab to use in tests."""
+    """Fake AbstractPane to use in tests."""
 
     def __init__(self, url=QUrl(), title='', tab_id=0, *,
                  scroll_pos_perc=(0, 0),
@@ -499,7 +499,7 @@ class TabbedBrowserStub(QObject):
 
     """Stub for the tabbed-browser object."""
 
-    new_tab = pyqtSignal(browserpane.AbstractTab, int)
+    new_tab = pyqtSignal(browserpane.AbstractPane, int)
 
     def __init__(self, parent=None):
         super().__init__(parent)

@@ -127,7 +127,7 @@ def get_webelem(geometry=None, frame=None, *, null=False, style=None,
         return style_dict[name]
 
     elem.styleProperty.side_effect = _style_property
-    tab = mock.Mock(autospec=browserpane.AbstractTab)
+    tab = mock.Mock(autospec=browserpane.AbstractPane)
     tab.is_deleted.return_value = False
     wrapped = webkitelem.WebKitElement(elem, tab=tab)
     return wrapped

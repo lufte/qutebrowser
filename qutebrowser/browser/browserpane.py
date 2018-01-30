@@ -35,15 +35,15 @@ from qutebrowser.misc import miscwidgets, objects
 from qutebrowser.browser import mouse, hints
 
 
-tab_id_gen = itertools.count(0)
+pane_id_gen = itertools.count(0)
 
 
 def create(win_id, private, parent=None):
-    """Get a QtWebKit/QtWebEngine tab object.
+    """Get a QtWebKit/QtWebEngine pane object.
 
     Args:
-        win_id: The window ID where the tab will be shown.
-        private: Whether the tab is a private/off the record tab.
+        win_id: The window ID where the pane will be shown.
+        private: Whether the pane is a private/off the record tab.
         parent: The Qt parent to set.
     """
     # Importing modules here so we don't depend on QtWebEngine without the
@@ -51,12 +51,12 @@ def create(win_id, private, parent=None):
     mode_manager = modeman.instance(win_id)
     if objects.backend == usertypes.Backend.QtWebEngine:
         from qutebrowser.browser.webengine import webenginepane
-        tab_class = webenginepane.WebEngineTab
+        pane_class = webenginepane.WebEnginePane
     else:
         from qutebrowser.browser.webkit import webkitpane
-        tab_class = webkitpane.WebKitTab
-    return tab_class(win_id=win_id, mode_manager=mode_manager, private=private,
-                     parent=parent)
+        pane_class = webkitpane.WebKitPane
+    return pane_class(win_id=win_id, mode_manager=mode_manager,
+                      private=private, parent=parent)
 
 
 def init():
@@ -106,7 +106,7 @@ class PaneData:
 
 class AbstractAction:
 
-    """Attribute of AbstractTab for Qt WebActions.
+    """Attribute of AbstractPane for Qt WebActions.
 
     Class attributes (overridden by subclasses):
         action_class: The class actions are defined on (QWeb{Engine,}Page)
@@ -137,7 +137,7 @@ class AbstractAction:
 
 class AbstractPrinting:
 
-    """Attribute of AbstractTab for printing the page."""
+    """Attribute of AbstractPane for printing the page."""
 
     def __init__(self):
         self._widget = None
@@ -167,7 +167,7 @@ class AbstractPrinting:
 
 class AbstractSearch(QObject):
 
-    """Attribute of AbstractTab for doing searches.
+    """Attribute of AbstractPane for doing searches.
 
     Attributes:
         text: The last thing this view was searched for.
@@ -233,7 +233,7 @@ class AbstractSearch(QObject):
 
 class AbstractZoom(QObject):
 
-    """Attribute of AbstractTab for controlling zoom.
+    """Attribute of AbstractPane for controlling zoom.
 
     Attributes:
         _neighborlist: A NeighborList with the zoom levels.
@@ -317,7 +317,7 @@ class AbstractZoom(QObject):
 
 class AbstractCaret(QObject):
 
-    """Attribute of AbstractTab for caret browsing."""
+    """Attribute of AbstractPane for caret browsing."""
 
     def __init__(self, win_id, tab, mode_manager, parent=None):
         super().__init__(parent)
@@ -397,7 +397,7 @@ class AbstractCaret(QObject):
 
 class AbstractScroller(QObject):
 
-    """Attribute of AbstractTab to manage scroll position."""
+    """Attribute of AbstractPane to manage scroll position."""
 
     perc_changed = pyqtSignal(int, int)
 
@@ -466,7 +466,7 @@ class AbstractScroller(QObject):
 
 class AbstractHistory:
 
-    """The history attribute of a AbstractTab."""
+    """The history attribute of a AbstractPane."""
 
     def __init__(self, tab):
         self._tab = tab
@@ -573,7 +573,7 @@ class AbstractElements:
         raise NotImplementedError
 
 
-class AbstractTab(QWidget):
+class AbstractPane(QWidget):
 
     """A wrapper over the given widget to hide its API and expose another one.
 
@@ -625,13 +625,13 @@ class AbstractTab(QWidget):
     def __init__(self, *, win_id, mode_manager, private, parent=None):
         self.private = private
         self.win_id = win_id
-        self.tab_id = next(tab_id_gen)
+        self.pane_id = next(pane_id_gen)
         super().__init__(parent)
 
         self.registry = objreg.ObjectRegistry()
         tab_registry = objreg.get('tab-registry', scope='window',
                                   window=win_id)
-        tab_registry[self.tab_id] = self
+        tab_registry[self.pane_id] = self
         objreg.register('tab', self, registry=self.registry)
 
         # self.history = AbstractHistory(self)
@@ -657,9 +657,9 @@ class AbstractTab(QWidget):
 
         # FIXME:qtwebengine  Should this be public api via self.hints?
         #                    Also, should we get it out of objreg?
-        hintmanager = hints.HintManager(win_id, self.tab_id, parent=self)
+        hintmanager = hints.HintManager(win_id, self.pane_id, parent=self)
         objreg.register('hintmanager', hintmanager, scope='tab',
-                        window=self.win_id, tab=self.tab_id)
+                        window=self.win_id, tab=self.pane_id)
 
     def _set_widget(self, widget):
         # pylint: disable=protected-access
@@ -865,7 +865,7 @@ class AbstractTab(QWidget):
                               100)
         except (AttributeError, RuntimeError) as exc:
             url = '<{}>'.format(exc.__class__.__name__)
-        return utils.get_repr(self, tab_id=self.tab_id, url=url)
+        return utils.get_repr(self, pane_id=self.pane_id, url=url)
 
     def is_deleted(self):
         return sip.isdeleted(self._widget)

@@ -159,7 +159,7 @@ class TabWidget(QTabWidget):
         page_title = self.page_title(idx)
 
         fields = {}
-        fields['id'] = pane.tab_id
+        fields['id'] = pane.pane_id
         fields['title'] = page_title
         fields['title_sep'] = ' - ' if page_title else ''
         fields['perc_raw'] = pane.progress()
