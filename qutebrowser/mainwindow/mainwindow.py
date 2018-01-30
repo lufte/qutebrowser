@@ -467,7 +467,7 @@ class MainWindow(QWidget):
         message_bridge.s_maybe_reset_text.connect(status.txt.maybe_reset_text)
 
         # statusbar
-        tabs.current_tab_changed.connect(status.on_tab_changed)
+        tabs.current_pane_changed.connect(status.on_pane_changed)
 
         tabs.cur_progress.connect(status.prog.setValue)
         tabs.cur_load_finished.connect(status.prog.hide)

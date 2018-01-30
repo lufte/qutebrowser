@@ -134,7 +134,7 @@ class TabWidget(QTabWidget):
                    is only set if the given field is in the template.
         """
         tab = self.widget(idx)
-        if tab.data.pinned:
+        if tab.active_pane.data.pinned:
             fmt = config.val.tabs.title.format_pinned
         else:
             fmt = config.val.tabs.title.format
@@ -156,18 +156,19 @@ class TabWidget(QTabWidget):
         if tab is None:
             log.misc.debug("Got None-tab in get_tab_fields!")
 
+        pane = tab.active_pane
         page_title = self.page_title(idx)
 
         fields = {}
-        fields['id'] = tab.tab_id
+        fields['id'] = pane.tab_id
         fields['title'] = page_title
         fields['title_sep'] = ' - ' if page_title else ''
-        fields['perc_raw'] = tab.progress()
+        fields['perc_raw'] = pane.progress()
         fields['backend'] = objects.backend.name
-        fields['private'] = ' [Private Mode] ' if tab.private else ''
+        fields['private'] = ' [Private Mode] ' if pane.private else ''
 
-        if tab.load_status() == usertypes.LoadStatus.loading:
-            fields['perc'] = '[{}%] '.format(tab.progress())
+        if pane.load_status() == usertypes.LoadStatus.loading:
+            fields['perc'] = '[{}%] '.format(pane.progress())
         else:
             fields['perc'] = ''
 
@@ -182,7 +183,7 @@ class TabWidget(QTabWidget):
             fields['current_url'] = url.toDisplayString()
             fields['protocol'] = url.scheme()
 
-        y = tab.scroller.pos_perc()[1]
+        y = pane.scroller.pos_perc()[1]
         if y is None:
             scroll_pos = '???'
         elif y <= 0:
@@ -289,7 +290,7 @@ class TabWidget(QTabWidget):
         if tab is None:
             url = QUrl()
         else:
-            url = tab.url()
+            url = tab.active_pane.url()
         # It's possible for url to be invalid, but the caller will handle that.
         qtutils.ensure_valid(url)
         return url
@@ -377,7 +378,7 @@ class TabBar(QTabBar):
         tab = self._current_tab()
         if (show in ['never', 'switching'] or
                 (show == 'multiple' and self.count() == 1) or
-                (tab and tab.data.fullscreen)):
+                (tab and tab.active_pane.data.fullscreen)):
             self.hide()
         else:
             self.show()

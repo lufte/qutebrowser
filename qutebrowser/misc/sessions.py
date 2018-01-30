@@ -247,7 +247,8 @@ class SessionManager(QObject):
                 win_data['private'] = True
             for i, tab in enumerate(tabbed_browser.widgets()):
                 active = i == tabbed_browser.currentIndex()
-                win_data['tabs'].append(self._save_tab(tab, active))
+                # win_data['tabs'].append(self._save_tab(tab, active))
+                # FIXPANE
             data['windows'].append(win_data)
         return data
 
@@ -310,6 +311,7 @@ class SessionManager(QObject):
         """Save the autosave session."""
         try:
             self.save('_autosave')
+            pass
         except SessionError as e:
             log.sessions.error("Failed to save autosave session: {}".format(e))
 

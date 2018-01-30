@@ -29,7 +29,7 @@ from PyQt5.QtGui import QIcon
 from qutebrowser.config import config
 from qutebrowser.keyinput import modeman
 from qutebrowser.mainwindow import tabwidget, mainwindow
-from qutebrowser.browser import signalfilter, browserpane
+from qutebrowser.browser import signalfilter, browserpane, browsertab
 from qutebrowser.utils import (log, usertypes, utils, qtutils, objreg,
                                urlutils, message, jinja)
 
@@ -93,6 +93,7 @@ class TabbedBrowser(tabwidget.TabWidget):
                  widget can adjust its size to it.
                  arg: The new size.
         current_tab_changed: The current tab changed to the emitted tab.
+        current_pane_changed: The current pane changed to the emitted pane.
         new_tab: Emits the new WebView and its index when a new tab is opened.
     """
 
@@ -106,7 +107,8 @@ class TabbedBrowser(tabwidget.TabWidget):
     cur_fullscreen_requested = pyqtSignal(bool)
     close_window = pyqtSignal()
     resized = pyqtSignal('QRect')
-    current_tab_changed = pyqtSignal(browserpane.AbstractTab)
+    current_tab_changed = pyqtSignal(browsertab.Tab)
+    current_pane_changed = pyqtSignal(browserpane.AbstractTab)
     new_tab = pyqtSignal(browserpane.AbstractTab, int)
 
     def __init__(self, *, win_id, private, parent=None):
@@ -197,47 +199,47 @@ class TabbedBrowser(tabwidget.TabWidget):
         title = title_format.format(**fields)
         self.window().setWindowTitle(title)
 
-    def _connect_tab_signals(self, tab):
-        """Set up the needed signals for tab."""
+    def _connect_pane_signals(self, pane):
+        """Set up the needed signals for pane."""
         # filtered signals
-        tab.link_hovered.connect(
-            self._filter.create(self.cur_link_hovered, tab))
-        tab.load_progress.connect(
-            self._filter.create(self.cur_progress, tab))
-        tab.load_finished.connect(
-            self._filter.create(self.cur_load_finished, tab))
-        tab.load_started.connect(
-            self._filter.create(self.cur_load_started, tab))
-        tab.scroller.perc_changed.connect(
-            self._filter.create(self.cur_scroll_perc_changed, tab))
-        tab.url_changed.connect(
-            self._filter.create(self.cur_url_changed, tab))
-        tab.load_status_changed.connect(
-            self._filter.create(self.cur_load_status_changed, tab))
-        tab.fullscreen_requested.connect(
-            self._filter.create(self.cur_fullscreen_requested, tab))
+        pane.link_hovered.connect(
+            self._filter.create(self.cur_link_hovered, pane))
+        pane.load_progress.connect(
+            self._filter.create(self.cur_progress, pane))
+        pane.load_finished.connect(
+            self._filter.create(self.cur_load_finished, pane))
+        pane.load_started.connect(
+            self._filter.create(self.cur_load_started, pane))
+        pane.scroller.perc_changed.connect(
+            self._filter.create(self.cur_scroll_perc_changed, pane))
+        pane.url_changed.connect(
+            self._filter.create(self.cur_url_changed, pane))
+        pane.load_status_changed.connect(
+            self._filter.create(self.cur_load_status_changed, pane))
+        pane.fullscreen_requested.connect(
+            self._filter.create(self.cur_fullscreen_requested, pane))
         # misc
-        tab.scroller.perc_changed.connect(self.on_scroll_pos_changed)
-        tab.url_changed.connect(
-            functools.partial(self.on_url_changed, tab))
-        tab.title_changed.connect(
-            functools.partial(self.on_title_changed, tab))
-        tab.icon_changed.connect(
-            functools.partial(self.on_icon_changed, tab))
-        tab.load_progress.connect(
-            functools.partial(self.on_load_progress, tab))
-        tab.load_finished.connect(
-            functools.partial(self.on_load_finished, tab))
-        tab.load_started.connect(
-            functools.partial(self.on_load_started, tab))
-        tab.window_close_requested.connect(
-            functools.partial(self.on_window_close_requested, tab))
-        tab.renderer_process_terminated.connect(
-            functools.partial(self._on_renderer_process_terminated, tab))
-        tab.new_tab_requested.connect(self.tabopen)
+        pane.scroller.perc_changed.connect(self.on_scroll_pos_changed)
+        pane.url_changed.connect(
+            functools.partial(self.on_url_changed, pane))
+        pane.title_changed.connect(
+            functools.partial(self.on_title_changed, pane))
+        pane.icon_changed.connect(
+            functools.partial(self.on_icon_changed, pane))
+        pane.load_progress.connect(
+            functools.partial(self.on_load_progress, pane))
+        pane.load_finished.connect(
+            functools.partial(self.on_load_finished, pane))
+        pane.load_started.connect(
+            functools.partial(self.on_load_started, pane))
+        pane.window_close_requested.connect(
+            functools.partial(self.on_window_close_requested, pane))
+        pane.renderer_process_terminated.connect(
+            functools.partial(self._on_renderer_process_terminated, pane))
+        pane.new_tab_requested.connect(self.tabopen)
         if not self.private:
             web_history = objreg.get('web-history')
-            tab.add_history_item.connect(web_history.add_from_tab)
+            pane.add_history_item.connect(web_history.add_from_tab)
 
     def current_url(self):
         """Get the URL of the current tab.
@@ -321,36 +323,38 @@ class TabbedBrowser(tabwidget.TabWidget):
             objreg.delete('last-focused-tab', scope='window',
                           window=self._win_id)
 
-        if tab.url().isEmpty():
-            # There are some good reasons why a URL could be empty
-            # (target="_blank" with a download, see [1]), so we silently ignore
-            # this.
-            # [1] https://github.com/qutebrowser/qutebrowser/issues/163
-            pass
-        elif not tab.url().isValid():
-            # We display a warning for URLs which are not empty but invalid -
-            # but we don't return here because we want the tab to close either
-            # way.
-            urlutils.invalid_url_error(tab.url(), "saving tab")
-        elif add_undo:
-            try:
-                history_data = tab.history.serialize()
-            except browserpane.WebTabError:
-                pass  # special URL
-            else:
-                entry = UndoEntry(tab.url(), history_data, idx,
-                                  tab.data.pinned)
-                if new_undo or not self._undo_stack:
-                    self._undo_stack.append([entry])
-                else:
-                    self._undo_stack[-1].append(entry)
+        # if tab.url().isEmpty():
+        #     # There are some good reasons why a URL could be empty
+        #     # (target="_blank" with a download, see [1]), so we silently ignore
+        #     # this.
+        #     # [1] https://github.com/qutebrowser/qutebrowser/issues/163
+        #     pass
+        # elif not tab.url().isValid():
+        #     # We display a warning for URLs which are not empty but invalid -
+        #     # but we don't return here because we want the tab to close either
+        #     # way.
+        #     urlutils.invalid_url_error(tab.url(), "saving tab")
+        # elif add_undo:
+        #     try:
+        #         history_data = tab.history.serialize()
+        #     except browserpane.WebTabError:
+        #         pass  # special URL
+        #     else:
+        #         entry = UndoEntry(tab.url(), history_data, idx,
+        #                           tab.data.pinned)
+        #         if new_undo or not self._undo_stack:
+        #             self._undo_stack.append([entry])
+        #         else:
+        #             self._undo_stack[-1].append(entry)
+        # FIXPANE
 
         tab.shutdown()
         self.removeTab(idx)
         if not crashed:
             # WORKAROUND for a segfault when we delete the crashed tab.
             # see https://bugreports.qt.io/browse/QTBUG-58698
-            tab.layout().unwrap()
+            # tab.layout().unwrap()
+            # FIXPANE
             tab.deleteLater()
 
     def undo(self):
@@ -462,16 +466,16 @@ class TabbedBrowser(tabwidget.TabWidget):
             return tabbed_browser.tabopen(url=url, background=background,
                                           related=related)
 
-        tab = browserpane.create(win_id=self._win_id, private=self.private,
-                                parent=self)
-        self._connect_tab_signals(tab)
+        tab = browsertab.Tab(win_id=self._win_id, private=self.private,
+                             parent=self)
+        self._connect_pane_signals(tab.active_pane)
 
         if idx is None:
             idx = self._get_new_tab_idx(related)
         self.insertTab(idx, tab, "")
 
         if url is not None:
-            tab.openurl(url)
+            tab.active_pane.openurl(url)
 
         if background is None:
             background = config.val.tabs.background
@@ -667,6 +671,7 @@ class TabbedBrowser(tabwidget.TabWidget):
                             scope='window', window=self._win_id)
         self._now_focused = tab
         self.current_tab_changed.emit(tab)
+        self.current_pane_changed.emit(tab.active_pane)
         QTimer.singleShot(0, self._update_window_title)
         self._tab_insert_idx_left = self.currentIndex()
         self._tab_insert_idx_right = self.currentIndex() + 1

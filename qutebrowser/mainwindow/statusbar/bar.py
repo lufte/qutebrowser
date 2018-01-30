@@ -219,9 +219,9 @@ class StatusBar(QWidget):
     @pyqtSlot()
     def maybe_hide(self):
         """Hide the statusbar if it's configured to do so."""
-        tab = self._current_tab()
+        pane = self._current_pane()
         hide = config.val.statusbar.hide
-        if hide or (tab is not None and tab.data.fullscreen):
+        if hide or (pane is not None and pane.data.fullscreen):
             self.hide()
         else:
             self.show()
@@ -235,11 +235,12 @@ class StatusBar(QWidget):
         """Getter for self.color_flags, so it can be used as Qt property."""
         return self._color_flags.to_stringlist()
 
-    def _current_tab(self):
-        """Get the currently displayed tab."""
+    def _current_pane(self):
+        """Get the active pane in the currenpanr displayed tab."""
         window = objreg.get('tabbed-browser', scope='window',
                             window=self._win_id)
-        return window.currentWidget()
+        tab = window.currentWidget()
+        return tab and tab.active_pane
 
     def set_mode_active(self, mode, val):
         """Setter for self.{insert,command,caret}_active.
@@ -260,11 +261,11 @@ class StatusBar(QWidget):
             log.statusbar.debug("Setting prompt flag to {}".format(val))
             self._color_flags.prompt = val
         elif mode == usertypes.KeyMode.caret:
-            tab = self._current_tab()
+            pane = self._current_pane()
             log.statusbar.debug("Setting caret flag - val {}, selection "
-                                "{}".format(val, tab.caret.selection_enabled))
+                                "{}".format(val, pane.caret.selection_enabled))
             if val:
-                if tab.caret.selection_enabled:
+                if pane.caret.selection_enabled:
                     self._set_mode_text("{} selection".format(mode.name))
                     self._color_flags.caret = ColorFlags.CaretMode.selection
                 else:
@@ -339,14 +340,14 @@ class StatusBar(QWidget):
             self.set_mode_active(old_mode, False)
 
     @pyqtSlot(browserpane.AbstractTab)
-    def on_tab_changed(self, tab):
-        """Notify sub-widgets when the tab has been changed."""
-        self.url.on_tab_changed(tab)
-        self.prog.on_tab_changed(tab)
-        self.percentage.on_tab_changed(tab)
-        self.backforward.on_tab_changed(tab)
+    def on_pane_changed(self, pane):
+        """Notify sub-widgets when the pane has been changed."""
+        self.url.on_pane_changed(pane)
+        self.prog.on_pane_changed(pane)
+        self.percentage.on_pane_changed(pane)
+        self.backforward.on_pane_changed(pane)
         self.maybe_hide()
-        assert tab.private == self._color_flags.private
+        assert pane.private == self._color_flags.private
 
     def resizeEvent(self, e):
         """Extend resizeEvent of QWidget to emit a resized signal afterwards.

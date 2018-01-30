@@ -166,12 +166,12 @@ class UrlText(textbase.TextBase):
             self._hover_url = None
         self._update_url()
 
-    def on_tab_changed(self, tab):
-        """Update URL if the tab changed."""
+    def on_pane_changed(self, pane):
+        """Update URL if the pane changed."""
         self._hover_url = None
-        if tab.url().isValid():
-            self._normal_url = urlutils.safe_display_string(tab.url())
+        if pane.url().isValid():
+            self._normal_url = urlutils.safe_display_string(pane.url())
         else:
             self._normal_url = ''
-        self.on_load_status_changed(tab.load_status().name)
+        self.on_load_status_changed(pane.load_status().name)
         self._update_url()
