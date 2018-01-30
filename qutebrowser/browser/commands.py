@@ -511,7 +511,7 @@ class CommandDispatcher:
             if config.val.tabs.tabs_are_windows:
                 new_tabbed_browser.window().setWindowIcon(curtab.icon())
 
-        newtab.data.keep_icon = True
+        newtab.parent().data.keep_icon = True
         newtab.history.deserialize(history)
         newtab.zoom.set_factor(curtab.zoom.factor())
         new_tabbed_browser.set_tab_pinned(newtab, curtab.data.pinned)

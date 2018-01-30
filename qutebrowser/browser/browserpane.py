@@ -86,26 +86,21 @@ TerminationStatus = enum.Enum('TerminationStatus', [
 
 
 @attr.s
-class TabData:
+class PaneData:
 
     """A simple namespace with a fixed set of attributes.
 
     Attributes:
-        keep_icon: Whether the (e.g. cloned) icon should not be cleared on page
-                   load.
         inspector: The QWebInspector used for this webview.
         viewing_source: Set if we're currently showing a source view.
         override_target: Override for open_target for fake clicks (like hints).
                          Only used for QtWebKit.
-        pinned: Flag to pin the tab.
         fullscreen: Whether the tab has a video shown fullscreen currently.
     """
 
-    keep_icon = attr.ib(False)
     viewing_source = attr.ib(False)
     inspector = attr.ib(None)
     override_target = attr.ib(None)
-    pinned = attr.ib(False)
     fullscreen = attr.ib(False)
 
 
@@ -649,7 +644,7 @@ class AbstractTab(QWidget):
         # self.elements = AbstractElements(self)
         # self.action = AbstractAction()
 
-        self.data = TabData()
+        self.data = PaneData()
         self._layout = miscwidgets.WrapperLayout(self)
         self._widget = None
         self._progress = 0

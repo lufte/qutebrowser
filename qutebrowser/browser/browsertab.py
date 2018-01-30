@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with qutebrowser.  If not, see <http://www.gnu.org/licenses/>.
 
+import attr
+
 from PyQt5.QtWidgets import QWidget, QGridLayout
 from qutebrowser.browser import browserpane
 
@@ -27,6 +29,7 @@ class Tab(QWidget):
 
     def __init__(self, win_id, private, parent=None):
         super().__init__(parent)
+        self.data = TabData()
 
         layout = QGridLayout()
         self.active_pane = browserpane.create(win_id, private)
@@ -35,3 +38,18 @@ class Tab(QWidget):
 
     def shutdown(self):
         self.active_pane.shutdown()
+
+
+@attr.s
+class TabData:
+
+    """A simple namespace with a fixed set of attributes.
+
+    Attributes:
+        keep_icon: Whether the (e.g. cloned) icon should not be cleared on page
+                   load.
+        pinned: Flag to pin the tab.
+    """
+
+    keep_icon = attr.ib(False)
+    pinned = attr.ib(False)

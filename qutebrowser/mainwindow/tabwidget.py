@@ -109,7 +109,6 @@ class TabWidget(QTabWidget):
         bar.set_tab_data(idx, 'pinned', pinned)
         tab.data.pinned = pinned
         self._update_tab_title(idx)
-
         bar.refresh()
 
     def tab_indicator_color(self, idx):
@@ -134,7 +133,7 @@ class TabWidget(QTabWidget):
                    is only set if the given field is in the template.
         """
         tab = self.widget(idx)
-        if tab.active_pane.data.pinned:
+        if tab.data.pinned:
             fmt = config.val.tabs.title.format_pinned
         else:
             fmt = config.val.tabs.title.format

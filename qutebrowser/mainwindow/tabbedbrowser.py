@@ -540,20 +540,24 @@ class TabbedBrowser(tabwidget.TabWidget):
                     self.window().setWindowIcon(self.default_window_icon)
 
     @pyqtSlot()
-    def on_load_started(self, tab):
-        """Clear icon and update title when a tab started loading.
+    def on_load_started(self, pane):
+        """Clear icon and update title when a pane started loading.
 
         Args:
-            tab: The tab where the signal belongs to.
+            pane: The pane where the signal belongs to.
         """
         try:
-            idx = self._tab_index(tab)
+            idx = self._tab_index(pane)
         except TabDeletedError:
             # We can get signals for tabs we already deleted...
             return
+        if pane is not pane.parent().active_pane:
+            # We don't care if it's not the active pane
+            # FIXPANE maybe create another SignalFilter for this
+            return
         self._update_tab_title(idx)
-        if tab.data.keep_icon:
-            tab.data.keep_icon = False
+        if pane.parent().data.keep_icon:
+            pane.parent().data.keep_icon = False
         else:
             self.setTabIcon(idx, QIcon())
             if (config.val.tabs.tabs_are_windows and
