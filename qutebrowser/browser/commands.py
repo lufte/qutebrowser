@@ -2224,3 +2224,33 @@ class CommandDispatcher:
 
         window = self._tabbed_browser.window()
         window.setWindowState(window.windowState() ^ Qt.WindowFullScreen)
+
+    @cmdutils.register(instance='command-dispatcher', scope='window')
+    def vsplit(self):
+        """Add a new column to the current tab."""
+        self._current_widget().vsplit()
+
+    @cmdutils.register(instance='command-dispatcher', scope='window')
+    def split(self):
+        """Add a new row to the current tab."""
+        self._current_widget().split()
+
+    @cmdutils.register(instance='command-dispatcher', scope='window')
+    def debug(self):
+        self._current_widget().debug()
+
+    @cmdutils.register(instance='command-dispatcher', scope='window')
+    def pane_up(self):
+        self._current_widget().move_pane_up()
+
+    @cmdutils.register(instance='command-dispatcher', scope='window')
+    def pane_right(self):
+        self._current_widget().move_pane_right()
+
+    @cmdutils.register(instance='command-dispatcher', scope='window')
+    def pane_down(self):
+        self._current_widget().move_pane_down()
+
+    @cmdutils.register(instance='command-dispatcher', scope='window')
+    def pane_left(self):
+        self._current_widget().move_pane_left()
