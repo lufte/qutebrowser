@@ -2233,7 +2233,7 @@ class CommandDispatcher:
     @cmdutils.register(instance='command-dispatcher', scope='window')
     def split(self):
         """Add a new row to the current tab."""
-        self._current_widget().split()
+        self._current_widget().hsplit()
 
     @cmdutils.register(instance='command-dispatcher', scope='window')
     def debug(self):

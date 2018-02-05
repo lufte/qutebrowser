@@ -43,21 +43,46 @@ class Tab(QWidget):
         self.active_pane.shutdown()
 
     def vsplit(self):
-        active_pane_url = self.active_pane.url()
-        active_pane_position = self.layout().getItemPosition(
-            self.layout().indexOf(self.active_pane))
-        self.active_pane = browserpane.create(self._win_id, self._private)
-        self.layout().addWidget(self.active_pane, active_pane_position[0],
-                                active_pane_position[1] + 1, 1, 1)
-        self.active_pane.openurl(active_pane_url)
+        self._split(False)
 
-    def split(self):
+    def hsplit(self):
+        self._split(True)
+
+    def _split(self, horizontal):
         active_pane_url = self.active_pane.url()
-        active_pane_position = self.layout().getItemPosition(
-            self.layout().indexOf(self.active_pane))
+        l = self.layout()  # just to make it shorter :)
+        curr_pos = l.getItemPosition(l.indexOf(self.active_pane))
+        offset = (curr_pos[0] if horizontal else curr_pos[1]) + 1
+        end = l.rowCount() if horizontal else l.columnCount()
+        panes_to_displace = []
+
+        for index in range(offset, end):
+            item = l.itemAtPosition(*(
+                (index, curr_pos[1])
+                if horizontal else
+                (curr_pos[0], index)
+            ))
+
+            if not item:
+                # should not be needed once I figure rowspans and colspans
+                continue
+            item_pos = (item.widget(),
+                        l.getItemPosition(l.indexOf(item.widget())))
+            if item_pos not in panes_to_displace:
+                panes_to_displace.append(item_pos)
+
+        for pane, old_pos in reversed(panes_to_displace):
+            l.removeWidget(pane)
+            l.addWidget(pane,
+                        old_pos[0] + (1 if horizontal else 0),
+                        old_pos[1] + (1 if not horizontal else 0),
+                        old_pos[2], old_pos[3])
+
         self.active_pane = browserpane.create(self._win_id, self._private)
-        self.layout().addWidget(self.active_pane, active_pane_position[0] + 1,
-                                active_pane_position[1], 1, 1)
+        self.layout().addWidget(self.active_pane,
+                                curr_pos[0] + (1 if horizontal else 0),
+                                curr_pos[1] + (1 if not horizontal else 0),
+                                1, 1)
         self.active_pane.openurl(active_pane_url)
 
     def _resize_panes(self):
@@ -108,7 +133,6 @@ class Tab(QWidget):
 
     def move_pane_left(self):
         self._move_pane(horizontal=True, increment=False)
-
 
 
 @attr.s
