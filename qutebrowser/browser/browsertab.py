@@ -20,13 +20,16 @@
 import attr
 import pdb
 
-from PyQt5.QtWidgets import QWidget, QGridLayout
+from PyQt5.QtWidgets import QWidget, QGridLayout, QFrame
 from qutebrowser.browser import browserpane
 
 
 class Tab(QWidget):
 
     """A browser tab. Contains one or more panes."""
+
+    _INACTIVE_PANE_STYLE = '#pane { border: 1px solid transparent; }'
+    _ACTIVE_PANE_STYLE = '#pane { border: 1px solid green; }'
 
     def __init__(self, win_id, private, parent=None):
         super().__init__(parent)
@@ -35,9 +38,19 @@ class Tab(QWidget):
         self.data = TabData()
 
         layout = QGridLayout()
-        self.active_pane = browserpane.create(win_id, private)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        self.active_pane = self._create_pane(win_id, private)
+        self.active_pane.setFrameStyle(QFrame.Panel | QFrame.Plain)
         layout.addWidget(self.active_pane, 0, 0, 1, 1)
         self.setLayout(layout)
+
+    @classmethod
+    def _create_pane(cls, win_id, private):
+        pane = browserpane.create(win_id, private)
+        pane.setObjectName('pane')
+        pane.setStyleSheet(cls._INACTIVE_PANE_STYLE)
+        return pane
 
     def shutdown(self):
         self.active_pane.shutdown()
@@ -78,7 +91,8 @@ class Tab(QWidget):
                         old_pos[1] + (1 if not horizontal else 0),
                         old_pos[2], old_pos[3])
 
-        self.active_pane = browserpane.create(self._win_id, self._private)
+        self._change_active_pane(
+            self._create_pane(self._win_id, self._private))
         self.layout().addWidget(self.active_pane,
                                 curr_pos[0] + (1 if horizontal else 0),
                                 curr_pos[1] + (1 if not horizontal else 0),
@@ -120,7 +134,7 @@ class Tab(QWidget):
                 if horizontal else
                 (new_pos[0] + step, new_pos[1])
             )
-        self.active_pane = new_pane
+        self._change_active_pane(new_pane)
 
     def move_pane_up(self):
         self._move_pane(horizontal=False, increment=False)
@@ -133,6 +147,11 @@ class Tab(QWidget):
 
     def move_pane_left(self):
         self._move_pane(horizontal=True, increment=False)
+
+    def _change_active_pane(self, new_active_pane):
+        self.active_pane.setStyleSheet(self._INACTIVE_PANE_STYLE)
+        new_active_pane.setStyleSheet(self._ACTIVE_PANE_STYLE)
+        self.active_pane = new_active_pane
 
 
 @attr.s

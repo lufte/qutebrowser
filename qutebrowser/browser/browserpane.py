@@ -26,7 +26,7 @@ import sip
 import attr
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QUrl, QObject, QSizeF, Qt
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget, QApplication
+from PyQt5.QtWidgets import QWidget, QApplication, QFrame
 
 from qutebrowser.keyinput import modeman
 from qutebrowser.config import config
@@ -573,7 +573,7 @@ class AbstractElements:
         raise NotImplementedError
 
 
-class AbstractPane(QWidget):
+class AbstractPane(QFrame):
 
     """A wrapper over the given widget to hide its API and expose another one.
 
