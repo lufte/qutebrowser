@@ -60,7 +60,7 @@ def create(win_id, private, parent=None):
         tab_class = webenginepane.WebEnginePane
     else:
         from qutebrowser.browser.webkit import webkitpane
-        tab_class = webkitpane.WebKitTab
+        tab_class = webkitpane.WebKitPane
     return tab_class(win_id=win_id, mode_manager=mode_manager, private=private,
                      parent=parent)
 

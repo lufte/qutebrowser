@@ -36,7 +36,7 @@ class WebView(QWebView):
     """Custom QWebView subclass with qutebrowser-specific features.
 
     Attributes:
-        tab: The WebKitTab object for this WebView
+        tab: The WebKitPane object for this WebView
         hintmanager: The HintManager instance for this view.
         scroll_pos: The current scroll position as (x%, y%) tuple.
         win_id: The window ID of the view.
