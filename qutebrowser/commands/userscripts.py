@@ -397,7 +397,7 @@ def run_async(tab, cmd, *args, win_id, env, verbose=False):
         NotFoundError if the command could not be found.
 
     Args:
-        tab: The WebKitTab/WebEngineTab to get the source from.
+        tab: The WebKitTab/WebEnginePane to get the source from.
         cmd: The userscript binary to run.
         *args: The arguments to pass to the userscript.
         win_id: The window id the userscript is executed in.

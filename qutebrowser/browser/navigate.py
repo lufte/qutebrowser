@@ -108,7 +108,7 @@ def prevnext(*, browserpane, win_id, baseurl, prev=False,
     """Click a "previous"/"next" element on the page.
 
     Args:
-        browserpane: The WebKitTab/WebEngineTab of the page.
+        browserpane: The WebKitTab/WebEnginePane of the page.
         baseurl: The base URL of the current tab.
         prev: True to open a "previous" link, False to open a "next" link.
         tab: True to open in a new tab, False for the current tab.

@@ -414,7 +414,7 @@ class WebEngineScroller(browserpane.AbstractScroller):
         page.scrollPositionChanged.connect(self._update_pos)
 
     def _repeated_key_press(self, key, count=1, modifier=Qt.NoModifier):
-        """Send count fake key presses to this scroller's WebEngineTab."""
+        """Send count fake key presses to this scroller's WebEnginePane."""
         for _ in range(min(count, 1000)):
             self._tab.key_press(key, modifier)
 
@@ -1008,9 +1008,9 @@ class _WebEngineScripts(QObject):
             page_scripts.insert(new_script)
 
 
-class WebEngineTab(browserpane.AbstractTab):
+class WebEnginePane(browserpane.AbstractTab):
 
-    """A QtWebEngine tab in the browser.
+    """A QtWebEngine pane in the browser.
 
     Signals:
         _load_finished_fake:

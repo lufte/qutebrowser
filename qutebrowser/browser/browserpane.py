@@ -57,7 +57,7 @@ def create(win_id, private, parent=None):
     mode_manager = modeman.instance(win_id)
     if objects.backend == usertypes.Backend.QtWebEngine:
         from qutebrowser.browser.webengine import webenginepane
-        tab_class = webenginepane.WebEngineTab
+        tab_class = webenginepane.WebEnginePane
     else:
         from qutebrowser.browser.webkit import webkitpane
         tab_class = webkitpane.WebKitTab
