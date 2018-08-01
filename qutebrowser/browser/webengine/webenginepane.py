@@ -1008,7 +1008,7 @@ class _WebEngineScripts(QObject):
             page_scripts.insert(new_script)
 
 
-class WebEnginePane(browserpane.AbstractTab):
+class WebEnginePane(browserpane.AbstractPane):
 
     """A QtWebEngine pane in the browser.
 

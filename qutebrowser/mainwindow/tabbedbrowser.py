@@ -107,8 +107,8 @@ class TabbedBrowser(QWidget):
     cur_caret_selection_toggled = pyqtSignal(bool)
     close_window = pyqtSignal()
     resized = pyqtSignal('QRect')
-    current_tab_changed = pyqtSignal(browserpane.AbstractTab)
-    new_tab = pyqtSignal(browserpane.AbstractTab, int)
+    current_tab_changed = pyqtSignal(browserpane.AbstractPane)
+    new_tab = pyqtSignal(browserpane.AbstractPane, int)
 
     def __init__(self, *, win_id, private, parent=None):
         super().__init__(parent)
@@ -419,7 +419,7 @@ class TabbedBrowser(QWidget):
         self.tab_close_prompt_if_pinned(
             tab, False, lambda: self.close_tab(tab))
 
-    @pyqtSlot(browserpane.AbstractTab)
+    @pyqtSlot(browserpane.AbstractPane)
     def on_window_close_requested(self, widget):
         """Close a tab with a widget given."""
         try:
@@ -583,7 +583,7 @@ class TabbedBrowser(QWidget):
         modeman.leave(self._win_id, usertypes.KeyMode.hint, 'load started',
                       maybe=True)
 
-    @pyqtSlot(browserpane.AbstractTab, str)
+    @pyqtSlot(browserpane.AbstractPane, str)
     def on_title_changed(self, tab, text):
         """Set the title of a tab.
 
@@ -607,7 +607,7 @@ class TabbedBrowser(QWidget):
         if idx == self.widget.currentIndex():
             self._update_window_title()
 
-    @pyqtSlot(browserpane.AbstractTab, QUrl)
+    @pyqtSlot(browserpane.AbstractPane, QUrl)
     def on_url_changed(self, tab, url):
         """Set the new URL as title if there's no title yet.
 
@@ -624,7 +624,7 @@ class TabbedBrowser(QWidget):
         if not self.widget.page_title(idx):
             self.widget.set_page_title(idx, url.toDisplayString())
 
-    @pyqtSlot(browserpane.AbstractTab, QIcon)
+    @pyqtSlot(browserpane.AbstractPane, QIcon)
     def on_icon_changed(self, tab, icon):
         """Set the icon of a tab.
 

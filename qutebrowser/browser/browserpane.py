@@ -129,7 +129,7 @@ class TabData:
 
 class AbstractAction:
 
-    """Attribute of AbstractTab for Qt WebActions.
+    """Attribute of AbstractPane for Qt WebActions.
 
     Class attributes (overridden by subclasses):
         action_class: The class actions are defined on (QWeb{Engine,}Page)
@@ -186,7 +186,7 @@ class AbstractAction:
 
 class AbstractPrinting:
 
-    """Attribute of AbstractTab for printing the page."""
+    """Attribute of AbstractPane for printing the page."""
 
     def __init__(self, tab):
         self._widget = None
@@ -240,7 +240,7 @@ class AbstractPrinting:
 
 class AbstractSearch(QObject):
 
-    """Attribute of AbstractTab for doing searches.
+    """Attribute of AbstractPane for doing searches.
 
     Attributes:
         text: The last thing this view was searched for.
@@ -315,7 +315,7 @@ class AbstractSearch(QObject):
 
 class AbstractZoom(QObject):
 
-    """Attribute of AbstractTab for controlling zoom.
+    """Attribute of AbstractPane for controlling zoom.
 
     Attributes:
         _neighborlist: A NeighborList with the zoom levels.
@@ -399,7 +399,7 @@ class AbstractZoom(QObject):
 
 class AbstractCaret(QObject):
 
-    """Attribute of AbstractTab for caret browsing.
+    """Attribute of AbstractPane for caret browsing.
 
     Signals:
         selection_toggled: Emitted when the selection was toggled.
@@ -491,7 +491,7 @@ class AbstractCaret(QObject):
 
 class AbstractScroller(QObject):
 
-    """Attribute of AbstractTab to manage scroll position."""
+    """Attribute of AbstractPane to manage scroll position."""
 
     perc_changed = pyqtSignal(int, int)
 
@@ -563,7 +563,7 @@ class AbstractScroller(QObject):
 
 class AbstractHistory:
 
-    """The history attribute of a AbstractTab."""
+    """The history attribute of a AbstractPane."""
 
     def __init__(self, tab):
         self._tab = tab
@@ -704,7 +704,7 @@ class AbstractAudio(QObject):
         raise NotImplementedError
 
 
-class AbstractTab(QWidget):
+class AbstractPane(QWidget):
 
     """A wrapper over the given widget to hide its API and expose another one.
 

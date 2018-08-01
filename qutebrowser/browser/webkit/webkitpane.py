@@ -651,7 +651,7 @@ class WebKitAudio(browserpane.AbstractAudio):
         return False
 
 
-class WebKitPane(browserpane.AbstractTab):
+class WebKitPane(browserpane.AbstractPane):
 
     """A QtWebKit tab in the browser."""
 
