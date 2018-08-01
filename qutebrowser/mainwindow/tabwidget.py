@@ -33,7 +33,7 @@ from PyQt5.QtGui import QIcon, QPalette, QColor
 from qutebrowser.utils import qtutils, objreg, utils, usertypes, log
 from qutebrowser.config import config
 from qutebrowser.misc import objects
-from qutebrowser.browser import browsertab
+from qutebrowser.browser import browserpane
 
 
 PixelMetrics = enum.IntEnum('PixelMetrics', ['icon_padding'],
@@ -181,7 +181,7 @@ class TabWidget(QTabWidget):
                 fields['audio'] = TabWidget.AUDIBLE_STRING
             else:
                 fields['audio'] = ''
-        except browsertab.WebTabError:
+        except browserpane.WebTabError:
             # Muting is only implemented with QtWebEngine
             fields['audio'] = ''
 

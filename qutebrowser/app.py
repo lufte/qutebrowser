@@ -63,7 +63,7 @@ from qutebrowser.completion import completiondelegate
 from qutebrowser.completion.models import miscmodels
 from qutebrowser.commands import cmdutils, runners, cmdexc
 from qutebrowser.config import config, websettings, configfiles, configinit
-from qutebrowser.browser import (urlmarks, adblock, history, browsertab,
+from qutebrowser.browser import (urlmarks, adblock, history, browserpane,
                                  qtnetworkdownloads, downloads, greasemonkey)
 from qutebrowser.browser.network import proxy
 from qutebrowser.browser.webkit import cookies, cache
@@ -167,7 +167,7 @@ def init(args, crash_handler):
 
     try:
         _init_modules(args, crash_handler)
-    except (OSError, UnicodeDecodeError, browsertab.WebTabError) as e:
+    except (OSError, UnicodeDecodeError, browserpane.WebTabError) as e:
         error.handle_fatal_exc(e, args, "Error while initializing!",
                                pre_text="Error while initializing")
         sys.exit(usertypes.Exit.err_init)
@@ -503,7 +503,7 @@ def _init_modules(args, crash_handler):
     log.init.debug("Misc initialization...")
     macros.init()
     # Init backend-specific stuff
-    browsertab.init()
+    browserpane.init()
 
 
 class Quitter:

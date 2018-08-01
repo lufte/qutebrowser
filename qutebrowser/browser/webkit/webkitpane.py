@@ -30,14 +30,14 @@ from PyQt5.QtWebKitWidgets import QWebPage, QWebFrame
 from PyQt5.QtWebKit import QWebSettings
 from PyQt5.QtPrintSupport import QPrinter
 
-from qutebrowser.browser import browsertab, shared
+from qutebrowser.browser import browserpane, shared
 from qutebrowser.browser.webkit import (webview, tabhistory, webkitelem,
                                         webkitsettings)
 from qutebrowser.utils import qtutils, usertypes, utils, log, debug
 from qutebrowser.qt import sip
 
 
-class WebKitAction(browsertab.AbstractAction):
+class WebKitAction(browserpane.AbstractAction):
 
     """QtWebKit implementations related to web actions."""
 
@@ -45,17 +45,17 @@ class WebKitAction(browsertab.AbstractAction):
     action_base = QWebPage.WebAction
 
     def exit_fullscreen(self):
-        raise browsertab.UnsupportedOperationError
+        raise browserpane.UnsupportedOperationError
 
     def save_page(self):
         """Save the current page."""
-        raise browsertab.UnsupportedOperationError
+        raise browserpane.UnsupportedOperationError
 
     def show_source(self, pygments=False):
         self._show_source_pygments()
 
 
-class WebKitPrinting(browsertab.AbstractPrinting):
+class WebKitPrinting(browserpane.AbstractPrinting):
 
     """QtWebKit implementations related to printing."""
 
@@ -80,7 +80,7 @@ class WebKitPrinting(browsertab.AbstractPrinting):
             callback(True)
 
 
-class WebKitSearch(browsertab.AbstractSearch):
+class WebKitSearch(browserpane.AbstractSearch):
 
     """QtWebKit implementations related to searching on the page."""
 
@@ -167,7 +167,7 @@ class WebKitSearch(browsertab.AbstractSearch):
         self._call_cb(result_cb, found, self.text, flags, 'prev_result')
 
 
-class WebKitCaret(browsertab.AbstractCaret):
+class WebKitCaret(browserpane.AbstractCaret):
 
     """QtWebKit implementations related to moving the cursor/selection."""
 
@@ -378,14 +378,14 @@ class WebKitCaret(browsertab.AbstractCaret):
                 selected_element = xml.etree.ElementTree.fromstring(
                     '<html>{}</html>'.format(selection)).find('a')
             except xml.etree.ElementTree.ParseError:
-                raise browsertab.WebTabError('Could not parse selected '
+                raise browserpane.WebTabError('Could not parse selected '
                                              'element!')
 
             if selected_element is not None:
                 try:
                     url = selected_element.attrib['href']
                 except KeyError:
-                    raise browsertab.WebTabError('Anchor element without '
+                    raise browserpane.WebTabError('Anchor element without '
                                                  'href!')
                 url = self._tab.url().resolved(QUrl(url))
                 if tab:
@@ -400,7 +400,7 @@ class WebKitCaret(browsertab.AbstractCaret):
             self.follow_selected_done.emit()
 
 
-class WebKitZoom(browsertab.AbstractZoom):
+class WebKitZoom(browserpane.AbstractZoom):
 
     """QtWebKit implementations related to zooming."""
 
@@ -408,7 +408,7 @@ class WebKitZoom(browsertab.AbstractZoom):
         self._widget.setZoomFactor(factor)
 
 
-class WebKitScroller(browsertab.AbstractScroller):
+class WebKitScroller(browserpane.AbstractScroller):
 
     """QtWebKit implementations related to scrolling."""
 
@@ -509,7 +509,7 @@ class WebKitScroller(browsertab.AbstractScroller):
         return self.pos_px().y() >= frame.scrollBarMaximum(Qt.Vertical)
 
 
-class WebKitHistory(browsertab.AbstractHistory):
+class WebKitHistory(browserpane.AbstractHistory):
 
     """QtWebKit implementations related to page history."""
 
@@ -553,14 +553,14 @@ class WebKitHistory(browsertab.AbstractHistory):
                     self._tab.scroller.to_point, cur_data['scroll-pos']))
 
 
-class WebKitElements(browsertab.AbstractElements):
+class WebKitElements(browserpane.AbstractElements):
 
     """QtWebKit implemementations related to elements on the page."""
 
     def find_css(self, selector, callback, *, only_visible=False):
         mainframe = self._widget.page().mainFrame()
         if mainframe is None:
-            raise browsertab.WebTabError("No frame focused!")
+            raise browserpane.WebTabError("No frame focused!")
 
         elems = []
         frames = webkitelem.get_child_frames(mainframe)
@@ -637,12 +637,12 @@ class WebKitElements(browsertab.AbstractElements):
         callback(elem)
 
 
-class WebKitAudio(browsertab.AbstractAudio):
+class WebKitAudio(browserpane.AbstractAudio):
 
     """Dummy handling of audio status for QtWebKit."""
 
     def set_muted(self, muted: bool, override: bool = False):
-        raise browsertab.WebTabError('Muting is not supported on QtWebKit!')
+        raise browserpane.WebTabError('Muting is not supported on QtWebKit!')
 
     def is_muted(self):
         return False
@@ -651,7 +651,7 @@ class WebKitAudio(browsertab.AbstractAudio):
         return False
 
 
-class WebKitTab(browsertab.AbstractTab):
+class WebKitTab(browserpane.AbstractTab):
 
     """A QtWebKit tab in the browser."""
 
