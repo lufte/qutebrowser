@@ -53,8 +53,7 @@ class Tab(QWidget):
         self.setLayout(layout)
 
     def _create_pane(self):
-        pane = browserpane.create(self.tab_id, self.win_id, self.private,
-                                  parent=self)
+        pane = browserpane.create(self.win_id, self.private, parent=self)
         self.tabbedbrowser.connect_pane_signals(pane, self)
         return pane
 
