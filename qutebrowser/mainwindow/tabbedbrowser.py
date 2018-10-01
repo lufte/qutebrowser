@@ -199,8 +199,8 @@ class TabbedBrowser(QWidget):
         title = title_format.format(**fields)
         self.widget.window().setWindowTitle(title)
 
-    def connect_pane_signals(self, pane, tab):
-        """Set up the needed signals for tab."""
+    def connect_pane_signals(self, tab, pane):
+        """Set up the needed signals for pane."""
         # filtered signals
         pane.link_hovered.connect(
             self._filter.create(self.cur_link_hovered, tab))
