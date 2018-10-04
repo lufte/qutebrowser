@@ -250,7 +250,7 @@ class StatusBar(QWidget):
         """Hide the statusbar if it's configured to do so."""
         tab = self._current_tab()
         hide = config.val.statusbar.hide
-        if hide or (tab is not None and tab.data.fullscreen):
+        if hide or (tab is not None and tab.active_pane.data.fullscreen):
             self.hide()
         else:
             self.show()
@@ -360,14 +360,14 @@ class StatusBar(QWidget):
             self.set_mode_active(old_mode, False)
 
     @pyqtSlot(browserpane.AbstractPane)
-    def on_tab_changed(self, tab):
-        """Notify sub-widgets when the tab has been changed."""
-        self.url.on_tab_changed(tab)
-        self.prog.on_tab_changed(tab)
-        self.percentage.on_tab_changed(tab)
-        self.backforward.on_tab_changed(tab)
+    def on_pane_changed(self, pane):
+        """Notify sub-widgets when the pane has been changed."""
+        self.url.on_pane_changed(pane)
+        self.prog.on_pane_changed(pane)
+        self.percentage.on_pane_changed(pane)
+        self.backforward.on_pane_changed(pane)
         self.maybe_hide()
-        assert tab.private == self._color_flags.private
+        assert pane.private == self._color_flags.private
 
     @pyqtSlot(bool)
     def on_caret_selection_toggled(self, selection):

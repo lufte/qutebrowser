@@ -60,10 +60,10 @@ class Progress(QProgressBar):
         self.setValue(0)
         self.setVisible(self.enabled)
 
-    def on_tab_changed(self, tab):
-        """Set the correct value when the current tab changed."""
-        self.setValue(tab.progress())
-        if self.enabled and tab.load_status() == usertypes.LoadStatus.loading:
+    def on_pane_changed(self, pane):
+        """Set the correct value when the current pane changed."""
+        self.setValue(pane.progress())
+        if self.enabled and pane.load_status() == usertypes.LoadStatus.loading:
             self.show()
         else:
             self.hide()

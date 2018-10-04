@@ -39,12 +39,12 @@ class Backforward(textbase.TextBase):
             return
         self.on_tab_changed(tab)
 
-    def on_tab_changed(self, tab):
-        """Update the text based on the given tab."""
+    def on_pane_changed(self, pane):
+        """Update the text based on the given pane."""
         text = ''
-        if tab.history.can_go_back():
+        if pane.history.can_go_back():
             text += '<'
-        if tab.history.can_go_forward():
+        if pane.history.can_go_forward():
             text += '>'
         if text:
             text = '[' + text + ']'

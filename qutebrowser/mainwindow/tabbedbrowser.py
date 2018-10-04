@@ -93,6 +93,7 @@ class TabbedBrowser(QWidget):
                  widget can adjust its size to it.
                  arg: The new size.
         current_tab_changed: The current tab changed to the emitted tab.
+        current_pane_changed: The current pane changed to the emitted pane.
         new_tab: Emits the new WebView and its index when a new tab is opened.
     """
 
@@ -107,7 +108,8 @@ class TabbedBrowser(QWidget):
     cur_caret_selection_toggled = pyqtSignal(bool)
     close_window = pyqtSignal()
     resized = pyqtSignal('QRect')
-    current_tab_changed = pyqtSignal(browserpane.AbstractPane)
+    current_tab_changed = pyqtSignal(browsertab.Tab)
+    current_pane_changed = pyqtSignal(browserpane.AbstractPane)
     new_tab = pyqtSignal(browserpane.AbstractPane, int)
 
     def __init__(self, *, win_id, private, parent=None):
@@ -715,6 +717,7 @@ class TabbedBrowser(QWidget):
             modeman.enter(self._win_id, tab.data.input_mode, 'restore')
         log.modes.debug("Mode after pane change: {} (mode_on_change = {})"
                         .format(current_mode.name, mode_on_change))
+        self.current_pane_changed.emit(pane)
 
     @pyqtSlot()
     def on_cmd_return_pressed(self):

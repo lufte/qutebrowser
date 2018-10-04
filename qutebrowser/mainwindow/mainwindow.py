@@ -468,7 +468,8 @@ class MainWindow(QWidget):
         message_bridge.s_maybe_reset_text.connect(status.txt.maybe_reset_text)
 
         # statusbar
-        self.tabbed_browser.current_tab_changed.connect(status.on_tab_changed)
+        self.tabbed_browser.current_pane_changed.connect(
+            status.on_pane_changed)
 
         self.tabbed_browser.cur_progress.connect(status.prog.setValue)
         self.tabbed_browser.cur_load_finished.connect(status.prog.hide)
