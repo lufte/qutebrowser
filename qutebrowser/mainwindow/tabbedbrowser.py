@@ -668,8 +668,7 @@ class TabbedBrowser(QWidget):
 
     @pyqtSlot(int)
     def on_current_changed(self, idx):
-        """Set last-focused-tab and leave hinting mode when focus changed."""
-        mode_on_change = config.val.tabs.mode_on_change
+        """Set last-focused-tab and react to pane changing."""
         if idx == -1 or self.shutting_down:
             # closing the last tab (before quitting) or shutting down
             return
@@ -679,14 +678,33 @@ class TabbedBrowser(QWidget):
                               "index {}".format(idx))
             return
 
-        log.modes.debug("Current tab changed, focusing {!r}".format(tab))
-        tab.setFocus()
+        self.on_current_pane_changed(tab.active_pane)
+
+        if self._now_focused is not None:
+            objreg.register('last-focused-tab', self._now_focused, update=True,
+                            scope='window', window=self._win_id)
+        self._now_focused = tab
+        self.current_tab_changed.emit(tab)
+        QTimer.singleShot(0, self._update_window_title)
+        self._tab_insert_idx_left = self.widget.currentIndex()
+        self._tab_insert_idx_right = self.widget.currentIndex() + 1
+
+    @pyqtSlot(browserpane.AbstractPane)
+    def on_current_pane_changed(self, pane):
+        """Leave hinting mode when focus changed."""
+        mode_on_change = config.val.tabs.mode_on_change
+        if pane is None or self.shutting_down:
+            # closing the last pane (before quitting) or shutting down
+            return
+
+        log.modes.debug("Current pane changed, focusing {!r}".format(pane))
+        pane.setFocus()
 
         modes_to_leave = [usertypes.KeyMode.hint, usertypes.KeyMode.caret]
 
         mm_instance = modeman.instance(self._win_id)
         current_mode = mm_instance.mode
-        log.modes.debug("Mode before tab change: {} (mode_on_change = {})"
+        log.modes.debug("Mode before pane change: {} (mode_on_change = {})"
                         .format(current_mode.name, mode_on_change))
         if mode_on_change == 'normal':
             modes_to_leave += modeman.INPUT_MODES
@@ -695,16 +713,8 @@ class TabbedBrowser(QWidget):
         if (mode_on_change == 'restore' and
                 current_mode not in modeman.PROMPT_MODES):
             modeman.enter(self._win_id, tab.data.input_mode, 'restore')
-        if self._now_focused is not None:
-            objreg.register('last-focused-tab', self._now_focused, update=True,
-                            scope='window', window=self._win_id)
-        log.modes.debug("Mode after tab change: {} (mode_on_change = {})"
+        log.modes.debug("Mode after pane change: {} (mode_on_change = {})"
                         .format(current_mode.name, mode_on_change))
-        self._now_focused = tab
-        self.current_tab_changed.emit(tab)
-        QTimer.singleShot(0, self._update_window_title)
-        self._tab_insert_idx_left = self.widget.currentIndex()
-        self._tab_insert_idx_right = self.widget.currentIndex() + 1
 
     @pyqtSlot()
     def on_cmd_return_pressed(self):
