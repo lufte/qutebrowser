@@ -37,7 +37,7 @@ class Backforward(textbase.TextBase):
             self.setText('')
             self.hide()
             return
-        self.on_tab_changed(tab)
+        self.on_pane_changed(tab.active_pane)
 
     def on_pane_changed(self, pane):
         """Update the text based on the given pane."""
