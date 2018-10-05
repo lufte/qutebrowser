@@ -171,13 +171,13 @@ class TabWidget(QTabWidget):
         fields['id'] = tab.tab_id
         fields['title'] = page_title
         fields['title_sep'] = ' - ' if page_title else ''
-        fields['perc_raw'] = tab.progress()
+        fields['perc_raw'] = tab.active_pane.progress()
         fields['backend'] = objects.backend.name
         fields['private'] = ' [Private Mode] ' if tab.private else ''
         try:
-            if tab.audio.is_muted():
+            if tab.active_pane.audio.is_muted():
                 fields['audio'] = TabWidget.MUTE_STRING
-            elif tab.audio.is_recently_audible():
+            elif tab.active_pane.audio.is_recently_audible():
                 fields['audio'] = TabWidget.AUDIBLE_STRING
             else:
                 fields['audio'] = ''
@@ -185,8 +185,8 @@ class TabWidget(QTabWidget):
             # Muting is only implemented with QtWebEngine
             fields['audio'] = ''
 
-        if tab.load_status() == usertypes.LoadStatus.loading:
-            fields['perc'] = '[{}%] '.format(tab.progress())
+        if tab.active_pane.load_status() == usertypes.LoadStatus.loading:
+            fields['perc'] = '[{}%] '.format(tab.active_pane.progress())
         else:
             fields['perc'] = ''
 
@@ -201,7 +201,7 @@ class TabWidget(QTabWidget):
             fields['current_url'] = url.toDisplayString()
             fields['protocol'] = url.scheme()
 
-        y = tab.scroller.pos_perc()[1]
+        y = tab.active_pane.scroller.pos_perc()[1]
         if y is None:
             scroll_pos = '???'
         elif y <= 0:
@@ -308,7 +308,7 @@ class TabWidget(QTabWidget):
         if tab is None:
             url = QUrl()
         else:
-            url = tab.url()
+            url = tab.active_pane.url()
         # It's possible for url to be invalid, but the caller will handle that.
         qtutils.ensure_valid(url)
         return url
@@ -412,7 +412,7 @@ class TabBar(QTabBar):
         tab = self._current_tab()
         if (show in ['never', 'switching'] or
                 (show == 'multiple' and self.count() == 1) or
-                (tab and tab.data.fullscreen)):
+                (tab and tab.active_pane.data.fullscreen)):
             self.hide()
         else:
             self.show()
