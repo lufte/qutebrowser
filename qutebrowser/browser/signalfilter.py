@@ -46,23 +46,24 @@ class SignalFilter(QObject):
         super().__init__(parent)
         self._win_id = win_id
 
-    def create(self, signal, tab):
+    def create(self, signal, tab, pane):
         """Factory for partial _filter_signals functions.
 
         Args:
             signal: The pyqtSignal to filter.
-            tab: The WebView to create filters for.
+            tab: The Tab to create filters for.
+            pane: The WebView to create filters for.
 
         Return:
             A partial function calling _filter_signals with a signal.
         """
-        return functools.partial(self._filter_signals, signal, tab)
+        return functools.partial(self._filter_signals, signal, tab, pane)
 
-    def _filter_signals(self, signal, tab, *args):
+    def _filter_signals(self, signal, tab, pane, *args):
         """Filter signals and trigger TabbedBrowser signals if needed.
 
-        Triggers signal if the original signal was sent from the _current_ tab
-        and not from any other one.
+        Triggers signal if the original signal was sent from the active pane in
+        the_current_ tab and not from any other one.
 
         The original signal does not matter, since we get the new signal and
         all args.
@@ -80,7 +81,11 @@ class SignalFilter(QObject):
         except RuntimeError:
             # The tab has been deleted already
             return
-        if tabidx == tabbed_browser.widget.currentIndex():
+        cur_tabidx = tabbed_browser.widget.currentIndex()
+        if (
+                tabidx == cur_tabidx and
+                tabbed_browser.widget.widget(cur_tabidx).active_pane is pane
+        ):
             if log_signal:
                 log.signals.debug("emitting: {} (tab {})".format(
                     debug.dbg_signal(signal, args), tabidx))

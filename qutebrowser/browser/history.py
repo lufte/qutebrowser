@@ -290,8 +290,8 @@ class WebHistory(sql.SqlTable):
         self.url_cleared.emit(qurl)
 
     @pyqtSlot(QUrl, QUrl, str)
-    def add_from_tab(self, url, requested_url, title):
-        """Add a new history entry as slot, called from a BrowserTab."""
+    def add_from_pane(self, url, requested_url, title):
+        """Add a new history entry as slot, called from a browser pane."""
         if any(url.scheme() in ('data', 'view-source') or
                (url.scheme(), url.host()) == ('qute', 'back')
                for url in (url, requested_url)):

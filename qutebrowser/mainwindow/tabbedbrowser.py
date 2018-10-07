@@ -205,49 +205,49 @@ class TabbedBrowser(QWidget):
         """Set up the needed signals for pane."""
         # filtered signals
         pane.link_hovered.connect(
-            self._filter.create(self.cur_link_hovered, tab))
+            self._filter.create(self.cur_link_hovered, tab, pane))
         pane.load_progress.connect(
-            self._filter.create(self.cur_progress, tab))
+            self._filter.create(self.cur_progress, tab, pane))
         pane.load_finished.connect(
-            self._filter.create(self.cur_load_finished, tab))
+            self._filter.create(self.cur_load_finished, tab, pane))
         pane.load_started.connect(
-            self._filter.create(self.cur_load_started, tab))
+            self._filter.create(self.cur_load_started, tab, pane))
         pane.scroller.perc_changed.connect(
-            self._filter.create(self.cur_scroll_perc_changed, tab))
+            self._filter.create(self.cur_scroll_perc_changed, tab, pane))
         pane.url_changed.connect(
-            self._filter.create(self.cur_url_changed, tab))
+            self._filter.create(self.cur_url_changed, tab, pane))
         pane.load_status_changed.connect(
-            self._filter.create(self.cur_load_status_changed, tab))
+            self._filter.create(self.cur_load_status_changed, tab, pane))
         pane.fullscreen_requested.connect(
-            self._filter.create(self.cur_fullscreen_requested, tab))
+            self._filter.create(self.cur_fullscreen_requested, tab, pane))
         pane.caret.selection_toggled.connect(
-            self._filter.create(self.cur_caret_selection_toggled, tab))
+            self._filter.create(self.cur_caret_selection_toggled, tab, pane))
         # misc
         pane.scroller.perc_changed.connect(self.on_scroll_pos_changed)
         pane.url_changed.connect(
-            functools.partial(self.on_url_changed, pane))
+            functools.partial(self.on_url_changed, tab, pane))
         pane.title_changed.connect(
-            functools.partial(self.on_title_changed, pane))
+            functools.partial(self.on_title_changed, tab, pane))
         pane.icon_changed.connect(
-            functools.partial(self.on_icon_changed, pane))
+            functools.partial(self.on_icon_changed, tab, pane))
         pane.load_progress.connect(
-            functools.partial(self.on_load_progress, pane))
+            functools.partial(self.on_load_progress, tab, pane))
         pane.load_finished.connect(
-            functools.partial(self.on_load_finished, pane))
+            functools.partial(self.on_load_finished, tab, pane))
         pane.load_started.connect(
-            functools.partial(self.on_load_started, pane))
+            functools.partial(self.on_load_started, tab, pane))
         pane.window_close_requested.connect(
-            functools.partial(self.on_window_close_requested, pane))
+            functools.partial(self.on_window_close_requested, tab))
         pane.renderer_process_terminated.connect(
             functools.partial(self._on_renderer_process_terminated, pane))
         pane.audio.muted_changed.connect(
-            functools.partial(self._on_audio_changed, pane))
+            functools.partial(self._on_audio_changed, tab, pane))
         pane.audio.recently_audible_changed.connect(
-            functools.partial(self._on_audio_changed, pane))
+            functools.partial(self._on_audio_changed, tab, pane))
         pane.new_tab_requested.connect(self.tabopen)
         if not self.private:
             web_history = objreg.get('web-history')
-            pane.add_history_item.connect(web_history.add_from_tab)
+            pane.add_history_item.connect(web_history.add_from_pane)
 
     def current_url(self):
         """Get the URL of the current tab.
@@ -421,10 +421,11 @@ class TabbedBrowser(QWidget):
         self.tab_close_prompt_if_pinned(
             tab, False, lambda: self.close_tab(tab))
 
-    @pyqtSlot(browserpane.AbstractPane)
+    @pyqtSlot(browsertab.Tab)
     def on_window_close_requested(self, widget):
-        """Close a tab with a widget given."""
+        """Close the tab if the last pane is closed."""
         try:
+            # TODO: check if it's the last pane
             self.close_tab(widget)
         except TabDeletedError:
             log.webview.debug("Requested to close {!r} which does not "
@@ -554,27 +555,29 @@ class TabbedBrowser(QWidget):
         for tab in self.widgets():
             self.widget.update_tab_favicon(tab)
 
-    @pyqtSlot()
-    def on_load_started(self, tab):
+    @pyqtSlot(browsertab.Tab, browserpane.AbstractPane)
+    def on_load_started(self, tab, pane):
         """Clear icon and update title when a tab started loading.
 
         Args:
             tab: The tab where the signal belongs to.
+            pane: The WebView where the signal belongs to.
         """
         try:
             idx = self._tab_index(tab)
         except TabDeletedError:
             # We can get signals for tabs we already deleted...
             return
-        self.widget.update_tab_title(idx)
-        if tab.data.keep_icon:
-            tab.data.keep_icon = False
-        else:
-            if (config.val.tabs.tabs_are_windows and
-                    tab.data.should_show_icon()):
-                self.widget.window().setWindowIcon(self.default_window_icon)
-        if idx == self.widget.currentIndex():
-            self._update_window_title()
+        if tab.active_pane is pane:
+            self.widget.update_tab_title(idx)
+            if tab.data.keep_icon:
+                tab.data.keep_icon = False
+            else:
+                if (config.val.tabs.tabs_are_windows and
+                        tab.data.should_show_icon()):
+                    self.widget.window().setWindowIcon(self.default_window_icon)
+            if idx == self.widget.currentIndex():
+                self._update_window_title()
 
     @pyqtSlot()
     def on_cur_load_started(self):
@@ -584,14 +587,15 @@ class TabbedBrowser(QWidget):
         modeman.leave(self._win_id, usertypes.KeyMode.hint, 'load started',
                       maybe=True)
 
-    @pyqtSlot(browserpane.AbstractPane, str)
-    def on_title_changed(self, tab, text):
+    @pyqtSlot(browsertab.Tab, browserpane.AbstractPane, str)
+    def on_title_changed(self, tab, pane, text):
         """Set the title of a tab.
 
         Slot for the title_changed signal of any tab.
 
         Args:
-            tab: The WebView where the title was changed.
+            tab: The Tab where the title was changed.
+            pane: The WebView where the title was changed.
             text: The text to set.
         """
         if not text:
@@ -604,16 +608,18 @@ class TabbedBrowser(QWidget):
             return
         log.webview.debug("Changing title for idx {} to '{}'".format(
             idx, text))
-        self.widget.set_page_title(idx, text)
-        if idx == self.widget.currentIndex():
-            self._update_window_title()
+        if tab.active_pane is pane:
+            self.widget.set_page_title(idx, text)
+            if idx == self.widget.currentIndex():
+                self._update_window_title()
 
-    @pyqtSlot(browserpane.AbstractPane, QUrl)
-    def on_url_changed(self, tab, url):
+    @pyqtSlot(browsertab.Tab, browserpane.AbstractPane, QUrl)
+    def on_url_changed(self, tab, pane, url):
         """Set the new URL as title if there's no title yet.
 
         Args:
-            tab: The WebView where the title was changed.
+            tab: The Tab where the url was changed.
+            pane: The WebView where the url was changed.
             url: The new URL.
         """
         try:
@@ -622,29 +628,31 @@ class TabbedBrowser(QWidget):
             # We can get signals for tabs we already deleted...
             return
 
-        if not self.widget.page_title(idx):
+        if not tab.active_pane is pane and self.widget.page_title(idx):
             self.widget.set_page_title(idx, url.toDisplayString())
 
-    @pyqtSlot(browserpane.AbstractPane, QIcon)
-    def on_icon_changed(self, tab, icon):
+    @pyqtSlot(browsertab.Tab, browserpane.AbstractPane, QIcon)
+    def on_icon_changed(self, tab, pane, icon):
         """Set the icon of a tab.
 
         Slot for the iconChanged signal of any tab.
 
         Args:
-            tab: The WebView where the title was changed.
+            tab: The Tab where the title was changed.
+            pane: The WebView where the title was changed.
             icon: The new icon
         """
-        if not tab.data.should_show_icon():
+        if not pane.data.should_show_icon():
             return
         try:
             idx = self._tab_index(tab)
         except TabDeletedError:
             # We can get signals for tabs we already deleted...
             return
-        self.widget.setTabIcon(idx, icon)
-        if config.val.tabs.tabs_are_windows:
-            self.widget.window().setWindowIcon(icon)
+        if tab.active_pane is pane:
+            self.widget.setTabIcon(idx, icon)
+            if config.val.tabs.tabs_are_windows:
+                self.widget.window().setWindowIcon(icon)
 
     @pyqtSlot(usertypes.KeyMode)
     def on_mode_entered(self, mode):
@@ -724,41 +732,45 @@ class TabbedBrowser(QWidget):
         """Set focus when the commandline closes."""
         log.modes.debug("Commandline closed, focusing {!r}".format(self))
 
-    def on_load_progress(self, tab, perc):
+    @pyqtSlot(browsertab.Tab, browserpane.AbstractPane, int)
+    def on_load_progress(self, tab, pane, perc):
         """Adjust tab indicator on load progress."""
         try:
             idx = self._tab_index(tab)
         except TabDeletedError:
             # We can get signals for tabs we already deleted...
             return
-        start = config.cache['colors.tabs.indicator.start']
-        stop = config.cache['colors.tabs.indicator.stop']
-        system = config.cache['colors.tabs.indicator.system']
-        color = utils.interpolate_color(start, stop, perc, system)
-        self.widget.set_tab_indicator_color(idx, color)
-        self.widget.update_tab_title(idx)
-        if idx == self.widget.currentIndex():
-            self._update_window_title()
+        if tab.active_pane is pane:
+            start = config.cache['colors.tabs.indicator.start']
+            stop = config.cache['colors.tabs.indicator.stop']
+            system = config.cache['colors.tabs.indicator.system']
+            color = utils.interpolate_color(start, stop, perc, system)
+            self.widget.set_tab_indicator_color(idx, color)
+            self.widget.update_tab_title(idx)
+            if idx == self.widget.currentIndex():
+                self._update_window_title()
 
-    def on_load_finished(self, tab, ok):
+    @pyqtSlot(browsertab.Tab, browserpane.AbstractPane, bool)
+    def on_load_finished(self, tab, pane, ok):
         """Adjust tab indicator when loading finished."""
         try:
             idx = self._tab_index(tab)
         except TabDeletedError:
             # We can get signals for tabs we already deleted...
             return
-        if ok:
-            start = config.val.colors.tabs.indicator.start
-            stop = config.val.colors.tabs.indicator.stop
-            system = config.val.colors.tabs.indicator.system
-            color = utils.interpolate_color(start, stop, 100, system)
-        else:
-            color = config.val.colors.tabs.indicator.error
-        self.widget.set_tab_indicator_color(idx, color)
-        self.widget.update_tab_title(idx)
-        if idx == self.widget.currentIndex():
-            self._update_window_title()
-            tab.handle_auto_insert_mode(ok)
+        if tab.active_pane is pane:
+            if ok:
+                start = config.val.colors.tabs.indicator.start
+                stop = config.val.colors.tabs.indicator.stop
+                system = config.val.colors.tabs.indicator.system
+                color = utils.interpolate_color(start, stop, 100, system)
+            else:
+                color = config.val.colors.tabs.indicator.error
+            self.widget.set_tab_indicator_color(idx, color)
+            self.widget.update_tab_title(idx)
+            if idx == self.widget.currentIndex():
+                self._update_window_title()
+                tab.handle_auto_insert_mode(ok)
 
     @pyqtSlot()
     def on_scroll_pos_changed(self):
@@ -772,18 +784,19 @@ class TabbedBrowser(QWidget):
         self._update_window_title('scroll_pos')
         self.widget.update_tab_title(idx, 'scroll_pos')
 
-    def _on_audio_changed(self, tab, _muted):
+    def _on_audio_changed(self, tab, pane, _muted):
         """Update audio field in tab when mute or recentlyAudible changed."""
         try:
             idx = self._tab_index(tab)
         except TabDeletedError:
             # We can get signals for tabs we already deleted...
             return
-        self.widget.update_tab_title(idx, 'audio')
-        if idx == self.widget.currentIndex():
-            self._update_window_title('audio')
+        if tab.active_pane is pane:
+            self.widget.update_tab_title(idx, 'audio')
+            if idx == self.widget.currentIndex():
+                self._update_window_title('audio')
 
-    def _on_renderer_process_terminated(self, tab, status, code):
+    def _on_renderer_process_terminated(self, pane, status, code):
         """Show an error when a renderer process terminated."""
         if status == browserpane.TerminationStatus.normal:
             return
@@ -801,11 +814,11 @@ class TabbedBrowser(QWidget):
         msg = messages[status]
 
         def show_error_page(html):
-            tab.set_html(html)
+            pane.set_html(html)
             log.webview.error(msg)
 
         if qtutils.version_check('5.9', compiled=False):
-            url_string = tab.url(requested=True).toDisplayString()
+            url_string = pane.url(requested=True).toDisplayString()
             error_page = jinja.render(
                 'error.html', title="Error loading {}".format(url_string),
                 url=url_string, error=msg)
@@ -813,7 +826,7 @@ class TabbedBrowser(QWidget):
         else:
             # WORKAROUND for https://bugreports.qt.io/browse/QTBUG-58698
             message.error(msg)
-            self._remove_tab(tab, crashed=True)
+            self._remove_tab(pane, crashed=True)
             if self.widget.count() == 0:
                 self.tabopen(QUrl('about:blank'))
 
