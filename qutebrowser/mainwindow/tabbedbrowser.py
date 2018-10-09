@@ -770,7 +770,7 @@ class TabbedBrowser(QWidget):
             self.widget.update_tab_title(idx)
             if idx == self.widget.currentIndex():
                 self._update_window_title()
-                tab.handle_auto_insert_mode(ok)
+                pane.handle_auto_insert_mode(ok)
 
     @pyqtSlot()
     def on_scroll_pos_changed(self):
