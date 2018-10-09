@@ -201,6 +201,7 @@ class SessionManager(QObject):
             tab: The WebView to save.
             active: Whether the tab is currently active.
         """
+        return
         data = {'history': []}
         if active:
             data['active'] = True
