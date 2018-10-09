@@ -320,7 +320,7 @@ class CommandDispatcher:
                 elif curtab.data.pinned:
                     message.info("Tab is pinned!")
                 else:
-                    curtab.openurl(cur_url)
+                    curtab.active_pane.openurl(cur_url)
 
     def _parse_url(self, url, *, force_search=False):
         """Parse a URL or quickmark or search query.
