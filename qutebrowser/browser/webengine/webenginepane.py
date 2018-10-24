@@ -1020,8 +1020,8 @@ class WebEnginePane(browserpane.AbstractPane):
     # WORKAROUND for https://bugreports.qt.io/browse/QTBUG-65223
     _load_finished_fake = pyqtSignal(bool)
 
-    def __init__(self, *, win_id, mode_manager, private, parent=None):
-        super().__init__(win_id=win_id, mode_manager=mode_manager,
+    def __init__(self, *, win_id, tab, mode_manager, private, parent=None):
+        super().__init__(win_id=win_id, tab=tab, mode_manager=mode_manager,
                          private=private, parent=parent)
         widget = webview.WebEngineView(tabdata=self.data, win_id=win_id,
                                        private=private)

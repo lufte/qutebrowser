@@ -53,9 +53,21 @@ class Tab(QWidget):
         self.setLayout(layout)
 
     def _create_pane(self):
-        pane = browserpane.create(self.win_id, self.private, parent=self)
+        pane = browserpane.create(self.win_id, self, self.private, parent=self)
         self.tabbedbrowser.connect_pane_signals(self, pane)
         return pane
+
+    def get_panes(self):
+        return [self.active_pane]
+
+    def close_pane(self, pane, crashed=False):
+        self.layout().removeWidget(pane)
+        pane.shutdown()
+        if not crashed:
+            # WORKAROUND for a segfault when we delete the crashed tab.
+            # see https://bugreports.qt.io/browse/QTBUG-58698
+            pane.layout().unwrap()
+            pane.deleteLater()
 
 
 @attr.s

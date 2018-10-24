@@ -267,6 +267,8 @@ class TabbedBrowser(QWidget):
         # Removing first causes [2..-1] to be recomputed
         # Removing the last causes nothing to be recomputed
         for tab in reversed(self.widgets()):
+            for pane in tab.get_panes():
+                tab.close_pane(pane)
             self._remove_tab(tab)
 
     def tab_close_prompt_if_pinned(
@@ -285,6 +287,21 @@ class TabbedBrowser(QWidget):
         else:
             yes_action()
 
+    def close_pane(self, pane, *, add_undo=True, new_undo=True, crashed=False):
+        """Close a pane.
+
+        Args:
+            pane: The QWebView to be closed.
+            add_undo: Whether the pane close can be undone.
+            new_undo: Whether the undo entry should be a new item in the stack.
+        """
+        tab = pane.tab
+        tab_panes = tab.get_panes()
+        tab.close_pane(pane, crashed=crashed)
+
+        if len(tab_panes) == 1:
+            self._remove_tab(tab)
+
     def close_tab(self, tab, *, add_undo=True, new_undo=True):
         """Close a tab.
 
@@ -299,7 +316,9 @@ class TabbedBrowser(QWidget):
         if last_close == 'ignore' and count == 1:
             return
 
-        self._remove_tab(tab, add_undo=add_undo, new_undo=new_undo)
+        for pane in tab.get_panes():
+            tab.close_pane(pane)
+        self._remove_tab(tab)
 
         if count == 1:  # We just closed the last tab above.
             if last_close == 'close':
@@ -312,21 +331,17 @@ class TabbedBrowser(QWidget):
             elif last_close == 'default-page':
                 self.openurl(config.val.url.default_page, newtab=True)
 
-    def _remove_tab(self, tab, *, add_undo=True, new_undo=True, crashed=False):
+    def _remove_tab(self, tab):
         """Remove a tab from the tab list and delete it properly.
 
         Args:
             tab: The QWebView to be closed.
-            add_undo: Whether the tab close can be undone.
-            new_undo: Whether the undo entry should be a new item in the stack.
-            crashed: Whether we're closing a tab with crashed renderer process.
         """
         idx = self.widget.indexOf(tab)
         if idx == -1:
-            if crashed:
-                return
             raise TabDeletedError("tab {} is not contained in "
                                   "TabbedWidget!".format(tab))
+
         if tab is self._now_focused:
             self._now_focused = None
         if tab is objreg.get('last-focused-tab', None, scope='window',
@@ -334,37 +349,7 @@ class TabbedBrowser(QWidget):
             objreg.delete('last-focused-tab', scope='window',
                           window=self._win_id)
 
-        if tab.url().isEmpty():
-            # There are some good reasons why a URL could be empty
-            # (target="_blank" with a download, see [1]), so we silently ignore
-            # this.
-            # [1] https://github.com/qutebrowser/qutebrowser/issues/163
-            pass
-        elif not tab.url().isValid():
-            # We display a warning for URLs which are not empty but invalid -
-            # but we don't return here because we want the tab to close either
-            # way.
-            urlutils.invalid_url_error(tab.url(), "saving tab")
-        elif add_undo:
-            try:
-                history_data = tab.history.serialize()
-            except browserpane.WebTabError:
-                pass  # special URL
-            else:
-                entry = UndoEntry(tab.url(), history_data, idx,
-                                  tab.data.pinned)
-                if new_undo or not self._undo_stack:
-                    self._undo_stack.append([entry])
-                else:
-                    self._undo_stack[-1].append(entry)
-
-        tab.shutdown()
         self.widget.removeTab(idx)
-        if not crashed:
-            # WORKAROUND for a segfault when we delete the crashed tab.
-            # see https://bugreports.qt.io/browse/QTBUG-58698
-            tab.layout().unwrap()
-            tab.deleteLater()
 
     def undo(self):
         """Undo removing of a tab or tabs."""
@@ -826,7 +811,7 @@ class TabbedBrowser(QWidget):
         else:
             # WORKAROUND for https://bugreports.qt.io/browse/QTBUG-58698
             message.error(msg)
-            self._remove_tab(pane, crashed=True)
+            self.close_pane(pane, crashed=True)
             if self.widget.count() == 0:
                 self.tabopen(QUrl('about:blank'))
 

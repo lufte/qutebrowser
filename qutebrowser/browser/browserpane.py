@@ -44,11 +44,12 @@ from qutebrowser.qt import sip
 tab_id_gen = itertools.count(0)
 
 
-def create(win_id, private, parent=None):
+def create(win_id, tab, private, parent=None):
     """Get a QtWebKit/QtWebEngine tab object.
 
     Args:
         win_id: The window ID where the tab will be shown.
+        tab: The tab container of the pane.
         private: Whether the tab is a private/off the record tab.
         parent: The Qt parent to set.
     """
@@ -61,8 +62,8 @@ def create(win_id, private, parent=None):
     else:
         from qutebrowser.browser.webkit import webkitpane
         tab_class = webkitpane.WebKitPane
-    return tab_class(win_id=win_id, mode_manager=mode_manager, private=private,
-                     parent=parent)
+    return tab_class(win_id=win_id, tab=tab, mode_manager=mode_manager,
+                     private=private, parent=parent)
 
 
 def init():
@@ -755,9 +756,10 @@ class AbstractPane(QWidget):
     renderer_process_terminated = pyqtSignal(TerminationStatus, int)
     predicted_navigation = pyqtSignal(QUrl)
 
-    def __init__(self, *, win_id, mode_manager, private, parent=None):
+    def __init__(self, *, win_id, tab, mode_manager, private, parent=None):
         self.private = private
         self.win_id = win_id
+        self.tab = tab
         self.tab_id = next(tab_id_gen)
         super().__init__(parent)
 
