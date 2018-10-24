@@ -77,14 +77,14 @@ class HintLabel(QLabel):
     """
 
     def __init__(self, elem, context):
-        super().__init__(parent=context.tab)
+        super().__init__(parent=context.pane)
         self._context = context
         self.elem = elem
 
         self.setAttribute(Qt.WA_StyledBackground, True)
         config.set_register_stylesheet(self)
 
-        self._context.tab.contents_size_changed.connect(self._move_to_elem)
+        self._context.pane.contents_size_changed.connect(self._move_to_elem)
         self._move_to_elem()
         self.show()
 
@@ -158,7 +158,7 @@ class HintContext:
         first_run: Whether the action is run for the 1st time in rapid hinting.
         add_history: Whether to add yanked or spawned link to the history.
         filterstr: Used to save the filter string for restoring in rapid mode.
-        tab: The WebTab object we started hinting in.
+        pane: The AbstractPane object we started hinting in.
         group: The group of web elements to hint.
     """
 
@@ -172,7 +172,7 @@ class HintContext:
     add_history = attr.ib(False)
     filterstr = attr.ib(None)
     args = attr.ib(attr.Factory(list))
-    tab = attr.ib(None)
+    pane = attr.ib(None)
     group = attr.ib(None)
     hint_mode = attr.ib(None)
     first = attr.ib(False)
@@ -302,8 +302,8 @@ class HintActions:
             raise HintingError("No suitable link found for this element.")
 
         prompt = False if context.rapid else None
-        qnam = context.tab.networkaccessmanager()
-        user_agent = context.tab.user_agent()
+        qnam = context.pane.networkaccessmanager()
+        user_agent = context.pane.user_agent()
 
         # FIXME:qtwebengine do this with QtWebEngine downloads?
         download_manager = objreg.get('qtnetwork-download-manager')
@@ -329,7 +329,7 @@ class HintActions:
             env['QUTE_URL'] = url.toString(QUrl.FullyEncoded)
 
         try:
-            userscripts.run_async(context.tab, cmd, *args, win_id=self._win_id,
+            userscripts.run_async(context.pane, cmd, *args, win_id=self._win_id,
                                   env=env)
         except userscripts.Error as e:
             raise HintingError(str(e))
@@ -702,8 +702,8 @@ class HintManager(QObject):
         """
         tabbed_browser = objreg.get('tabbed-browser', scope='window',
                                     window=self._win_id)
-        tab = tabbed_browser.widget.currentWidget()
-        if tab is None:
+        pane = tabbed_browser.widget.currentWidget().active_pane
+        if pane is None:
             raise cmdexc.CommandError("No WebView available yet!")
 
         mode_manager = objreg.get('mode-manager', scope='window',
@@ -735,7 +735,7 @@ class HintManager(QObject):
 
         self._check_args(target, *args)
         self._context = HintContext()
-        self._context.tab = tab
+        self._context.pane = pane
         self._context.target = target
         self._context.rapid = rapid
         self._context.hint_mode = mode
@@ -748,7 +748,7 @@ class HintManager(QObject):
         self._context.args = args
         self._context.group = group
         selector = webelem.SELECTORS[self._context.group]
-        self._context.tab.elements.find_css(selector, self._start_cb,
+        self._context.pane.elements.find_css(selector, self._start_cb,
                                             only_visible=True)
 
     def current_mode(self):
