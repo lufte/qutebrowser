@@ -393,7 +393,7 @@ class TabbedBrowser(QWidget):
         if newtab or self.widget.currentWidget() is None:
             self.tabopen(url, background=False)
         else:
-            self.widget.currentWidget().openurl(url)
+            self.widget.currentWidget().active_pane.openurl(url)
 
     @pyqtSlot(int)
     def on_tab_close_requested(self, idx):
@@ -849,7 +849,7 @@ class TabbedBrowser(QWidget):
             if key != "'":
                 message.error("Failed to set mark: url invalid")
             return
-        point = self.widget.currentWidget().scroller.pos_px()
+        point = self.widget.currentWidget().active_pane.scroller.pos_px()
 
         if key.isupper():
             self._global_marks[key] = point, url
@@ -870,7 +870,7 @@ class TabbedBrowser(QWidget):
         except qtutils.QtValueError:
             urlkey = None
 
-        tab = self.widget.currentWidget()
+        pane = self.widget.currentWidget().active_pane
 
         if key.isupper():
             if key in self._global_marks:
@@ -880,7 +880,7 @@ class TabbedBrowser(QWidget):
                     """Scroll once loading finished."""
                     if ok:
                         self.cur_load_finished.disconnect(callback)
-                        tab.scroller.to_point(point)
+                        pane.scroller.to_point(point)
 
                 self.openurl(url, newtab=False)
                 self.cur_load_finished.connect(callback)
@@ -896,6 +896,6 @@ class TabbedBrowser(QWidget):
             # "'" would just jump to the current position every time
             self.set_mark("'")
 
-            tab.scroller.to_point(point)
+            pane.scroller.to_point(point)
         else:
             message.error("Mark {} is not set".format(key))
