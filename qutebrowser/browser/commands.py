@@ -2240,3 +2240,13 @@ class CommandDispatcher:
             tab.audio.toggle_muted(override=True)
         except browserpane.WebTabError as e:
             raise cmdexc.CommandError(e)
+
+    @cmdutils.register(instance='command-dispatcher', scope='window')
+    def split(self):
+        """Split the current pane horizontally."""
+        self._current_widget().split(True)
+
+    @cmdutils.register(instance='command-dispatcher', scope='window')
+    def vsplit(self):
+        """Split the current pane vertically."""
+        self._current_widget().split(False)

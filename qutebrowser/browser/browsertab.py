@@ -20,9 +20,10 @@
 import attr
 import itertools
 
-from PyQt5.QtWidgets import QWidget, QGridLayout
+from PyQt5.QtWidgets import QWidget
 from qutebrowser.browser import browserpane
 from qutebrowser.utils import objreg
+from qutebrowser.utils.tilinglayout import QTilingLayout
 
 
 tab_id_gen = itertools.count(0)
@@ -30,6 +31,9 @@ tab_id_gen = itertools.count(0)
 
 class Tab(QWidget):
     """A browser tab. Contains one or more panes."""
+
+    _INACTIVE_PANE_STYLE = '#pane { border: 1px solid transparent; }'
+    _ACTIVE_PANE_STYLE = '#pane { border: 1px solid green; }'
 
     def __init__(self, win_id, tabbedbrowser, private, parent=None):
         super().__init__(parent)
@@ -45,10 +49,10 @@ class Tab(QWidget):
         tab_registry[self.tab_id] = self
         objreg.register('tab', self, registry=self.registry)
 
-        layout = QGridLayout()
+        self.active_pane = self._create_pane()
+        layout = QTilingLayout(self.active_pane)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
-        self.active_pane = self._create_pane()
         layout.addWidget(self.active_pane, 0, 0, 1, 1)
         self.setLayout(layout)
 
@@ -61,13 +65,30 @@ class Tab(QWidget):
         return [self.active_pane]
 
     def close_pane(self, pane, crashed=False):
-        self.layout().removeWidget(pane)
+        if len(self.get_panes()) > 1:
+            self.layout().remove_widget(pane)
         pane.shutdown()
         if not crashed:
             # WORKAROUND for a segfault when we delete the crashed tab.
             # see https://bugreports.qt.io/browse/QTBUG-58698
             pane.layout().unwrap()
             pane.deleteLater()
+
+    def split(self, horizontal):
+        old_pane = self.active_pane
+        self._change_active_pane(self._create_pane())
+        active_pane_url = self.active_pane.url()
+        self.active_pane.openurl(active_pane_url)
+        if horizontal:
+            self.layout().hsplit(old_pane, self.active_pane)
+        else:
+            self.layout().vsplit(old_pane, self.active_pane)
+
+    def _change_active_pane(self, new_active_pane):
+        self.active_pane.setStyleSheet(self._INACTIVE_PANE_STYLE)
+        new_active_pane.setStyleSheet(self._ACTIVE_PANE_STYLE)
+        self.active_pane = new_active_pane
+
 
 
 @attr.s
