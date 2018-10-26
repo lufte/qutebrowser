@@ -44,7 +44,7 @@ class Tab(QWidget):
         self.tab_id = next(tab_id_gen)
 
         self.active_pane = self._create_pane()
-        layout = QTilingLayout(self.active_pane)
+        layout = QTilingLayout(initial_widget=self.active_pane)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         layout.addWidget(self.active_pane, 0, 0, 1, 1)
@@ -71,8 +71,7 @@ class Tab(QWidget):
     def split(self, horizontal):
         old_pane = self.active_pane
         self._change_active_pane(self._create_pane())
-        active_pane_url = self.active_pane.url()
-        self.active_pane.openurl(active_pane_url)
+        self.active_pane.openurl(old_pane.url())
         if horizontal:
             self.layout().hsplit(old_pane, self.active_pane)
         else:
