@@ -25,7 +25,7 @@ import itertools
 import attr
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QUrl, QObject, QSizeF, Qt
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget, QApplication, QDialog
+from PyQt5.QtWidgets import QFrame, QApplication, QDialog
 from PyQt5.QtPrintSupport import QPrintDialog
 
 import pygments
@@ -705,7 +705,7 @@ class AbstractAudio(QObject):
         raise NotImplementedError
 
 
-class AbstractPane(QWidget):
+class AbstractPane(QFrame):
 
     """A wrapper over the given widget to hide its API and expose another one.
 

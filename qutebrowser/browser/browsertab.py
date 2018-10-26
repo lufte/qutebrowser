@@ -20,7 +20,7 @@
 import attr
 import itertools
 
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget, QFrame
 from qutebrowser.browser import browserpane
 from qutebrowser.utils import objreg
 from qutebrowser.utils.tilinglayout import QTilingLayout
@@ -44,10 +44,12 @@ class Tab(QWidget):
         self.tab_id = next(tab_id_gen)
 
         self.active_pane = self._create_pane()
+        self.active_pane.setObjectName('pane')
+        self.active_pane.setFrameStyle(QFrame.Panel | QFrame.Plain)
+        self.active_pane.setStyleSheet(self._ACTIVE_PANE_STYLE)
         layout = QTilingLayout(initial_widget=self.active_pane)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
-        layout.addWidget(self.active_pane, 0, 0, 1, 1)
         self.setLayout(layout)
 
     def _create_pane(self):
@@ -78,6 +80,8 @@ class Tab(QWidget):
             self.layout().vsplit(old_pane, self.active_pane)
 
     def _change_active_pane(self, new_active_pane):
+        new_active_pane.setFrameStyle(QFrame.Panel | QFrame.Plain)
+        new_active_pane.setObjectName('pane')
         self.active_pane.setStyleSheet(self._INACTIVE_PANE_STYLE)
         new_active_pane.setStyleSheet(self._ACTIVE_PANE_STYLE)
         self.active_pane = new_active_pane
