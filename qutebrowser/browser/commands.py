@@ -2250,3 +2250,23 @@ class CommandDispatcher:
     def vsplit(self):
         """Split the current pane vertically."""
         self._current_widget().split(False)
+
+    @cmdutils.register(instance='command-dispatcher', scope='window')
+    def pane_up(self):
+        self._current_widget().move_pane_up()
+
+    @cmdutils.register(instance='command-dispatcher', scope='window')
+    def pane_right(self):
+        self._current_widget().move_pane_right()
+
+    @cmdutils.register(instance='command-dispatcher', scope='window')
+    def pane_down(self):
+        self._current_widget().move_pane_down()
+
+    @cmdutils.register(instance='command-dispatcher', scope='window')
+    def pane_left(self):
+        self._current_widget().move_pane_left()
+
+    @cmdutils.register(instance='command-dispatcher', scope='window')
+    def pane_close(self):
+        self._current_widget().close_pane()

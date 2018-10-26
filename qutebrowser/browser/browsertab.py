@@ -60,7 +60,9 @@ class Tab(QWidget):
     def get_panes(self):
         return [self.active_pane]
 
-    def close_pane(self, pane, crashed=False):
+    def close_pane(self, pane=None, crashed=False):
+        if not pane:
+            pane = self.active_pane
         if len(self.get_panes()) > 1:
             self.layout().remove_widget(pane)
         pane.shutdown()
@@ -78,6 +80,33 @@ class Tab(QWidget):
             self.layout().hsplit(old_pane, self.active_pane)
         else:
             self.layout().vsplit(old_pane, self.active_pane)
+
+    def move_pane_up(self):
+        self._move_pane(horizontal=False, increment=False)
+
+    def move_pane_right(self):
+        self._move_pane(horizontal=True, increment=True)
+
+    def move_pane_down(self):
+        self._move_pane(horizontal=False, increment=True)
+
+    def move_pane_left(self):
+        self._move_pane(horizontal=True, increment=False)
+
+    def _move_pane(self, horizontal, increment):
+        new_pane = None
+
+        if horizontal and not increment:
+            new_pane = self.layout().get_left_neighbour(self.active_pane)
+        elif not horizontal and not increment:
+            new_pane = self.layout().get_top_neighbour(self.active_pane)
+        elif horizontal and increment:
+            new_pane = self.layout().get_right_neighbour(self.active_pane)
+        else:
+            new_pane = self.layout().get_bottom_neighbour(self.active_pane)
+
+        if new_pane:
+            self._change_active_pane(new_pane)
 
     def _change_active_pane(self, new_active_pane):
         new_active_pane.setFrameStyle(QFrame.Panel | QFrame.Plain)
