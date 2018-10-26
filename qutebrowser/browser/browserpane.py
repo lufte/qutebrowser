@@ -763,6 +763,12 @@ class AbstractPane(QWidget):
         self.tab_id = next(tab_id_gen)
         super().__init__(parent)
 
+        self.registry = objreg.ObjectRegistry()
+        tab_registry = objreg.get('tab-registry', scope='window',
+                                  window=win_id)
+        tab_registry[self.tab_id] = self
+        objreg.register('tab', self, registry=self.registry)
+
         self.data = TabData()
         self._layout = miscwidgets.WrapperLayout(self)
         self._widget = None

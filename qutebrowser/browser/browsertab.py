@@ -43,12 +43,6 @@ class Tab(QWidget):
         self.tabbedbrowser = tabbedbrowser
         self.tab_id = next(tab_id_gen)
 
-        self.registry = objreg.ObjectRegistry()
-        tab_registry = objreg.get('tab-registry', scope='window',
-                                  window=win_id)
-        tab_registry[self.tab_id] = self
-        objreg.register('tab', self, registry=self.registry)
-
         self.active_pane = self._create_pane()
         layout = QTilingLayout(self.active_pane)
         layout.setContentsMargins(0, 0, 0, 0)
