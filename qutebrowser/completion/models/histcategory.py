@@ -114,7 +114,7 @@ class HistoryCategory(QSqlQueryModel):
                     # need to tell SQL to treat '\' as an escape character
                     'WHERE ({})'.format(where_clause),
                     self._atime_expr(),
-                    "ORDER BY last_atime DESC",
+                    "ORDER BY frecency DESC",
                 ]), forward_only=False)
 
             with debug.log_time('sql', 'Running completion query'):

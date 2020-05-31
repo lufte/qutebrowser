@@ -272,7 +272,8 @@ class SqlTable(QObject):
 
     changed = pyqtSignal()
 
-    def __init__(self, name, fields, constraints=None, parent=None):
+    def __init__(self, name, fields, constraints=None, parent=None,
+                 recreate=False):
         """Create a new table in the SQL database.
 
         Does nothing if the table already exists.
@@ -281,9 +282,13 @@ class SqlTable(QObject):
             name: Name of the table.
             fields: A list of field names.
             constraints: A dict mapping field names to constraint strings.
+            recreate: Forces the re-creation of the table by dropping it first.
         """
         super().__init__(parent)
         self._name = name
+
+        if recreate:
+            Query("DROP TABLE IF EXISTS {}".format(self._name)).run()
 
         constraints = constraints or {}
         column_defs = ['{} {}'.format(field, constraints.get(field, ''))
@@ -343,34 +348,65 @@ class SqlTable(QObject):
             raise KeyError('No row with {} = "{}"'.format(field, value))
         self.changed.emit()
 
-    def _insert_query(self, values, replace):
+    def _insert_query(self, values, replace=False, ignore=False):
         params = ', '.join(':{}'.format(key) for key in values)
-        verb = "REPLACE" if replace else "INSERT"
+        verb = 'INSERT'
+        if replace:
+            verb += ' OR REPLACE'
+        elif ignore:
+            verb += ' OR IGNORE'
         return Query("{verb} INTO {table} ({columns}) values({params})".format(
             verb=verb, table=self._name, columns=', '.join(values),
             params=params))
 
-    def insert(self, values, replace=False):
+    def insert(self, values, replace=False, ignore=False):
         """Append a row to the table.
 
         Args:
             values: A dict with a value to insert for each field name.
             replace: If set, replace existing values.
+            ignore: If set, ignore conflicts.
         """
-        q = self._insert_query(values, replace)
-        q.run(**values)
+        q = self._insert_query(values, replace, ignore)
+        result = q.run(**values)
         self.changed.emit()
+        return result
 
-    def insert_batch(self, values, replace=False):
+    def insert_batch(self, values, replace=False, ignore=False):
         """Performantly append multiple rows to the table.
 
         Args:
             values: A dict with a list of values to insert for each field name.
             replace: If true, overwrite rows with a primary key match.
+            ignore: If set, ignore conflicts.
         """
         q = self._insert_query(values, replace)
         q.run_batch(values)
         self.changed.emit()
+
+    def update(self, update, where, escape=True):
+        """Execute update rows statement.
+        Args:
+            update: column:value dict with new values to set
+            where: column:value dict for filtering
+            escape: enable new values SQL-escaping
+        """
+        if escape:
+            u = ', '.join(('{} = :{}'.format(k, k) for k in update.keys()))
+        else:
+            u = ', '.join(('{} = {}'.format(k, v) for k, v in update.items()))
+
+        s = 'UPDATE {} SET {}'.format(self._name, u)
+        if where:
+            w = ' AND '.join(('{} = :w_{}'.format(f, f) for f in where.keys()))
+            s += ' WHERE {}'.format(w)
+
+        p = update.copy()
+        p.update({'w_' + k: v for k, v in where.items()})
+
+        result = Query(s).run(**p)
+        self.changed.emit()
+        return result
 
     def delete_all(self):
         """Remove all rows from the table."""
