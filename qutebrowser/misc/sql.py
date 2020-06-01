@@ -273,7 +273,7 @@ class SqlTable(QObject):
     changed = pyqtSignal()
 
     def __init__(self, name, fields, constraints=None, parent=None,
-                 recreate=False):
+                 drop=False):
         """Create a new table in the SQL database.
 
         Does nothing if the table already exists.
@@ -282,12 +282,12 @@ class SqlTable(QObject):
             name: Name of the table.
             fields: A list of field names.
             constraints: A dict mapping field names to constraint strings.
-            recreate: Forces the re-creation of the table by dropping it first.
+            drop: Forces the re-creation of the table by dropping it first.
         """
         super().__init__(parent)
         self._name = name
 
-        if recreate:
+        if drop:
             Query("DROP TABLE IF EXISTS {}".format(self._name)).run()
 
         constraints = constraints or {}

@@ -115,7 +115,7 @@ class CompletionHistory(sql.SqlTable):
 
     FRECENCY_BONUS = 43200  # Seconds in 12 hours
 
-    def __init__(self, parent=None, recreate=False):
+    def __init__(self, parent=None, drop=False):
         super().__init__("CompletionHistory", ['url', 'title', 'last_atime',
                                                'visits', 'frecency'],
                          constraints={'url': 'PRIMARY KEY',
@@ -123,7 +123,7 @@ class CompletionHistory(sql.SqlTable):
                                       'last_atime': 'INTEGER NOT NULL',
                                       'visits': 'INTEGER NOT NULL',
                                       'frecency': 'INTEGER NOT NULL'},
-                         parent=parent, recreate=recreate)
+                         parent=parent, drop=drop)
         self.create_index('CompletionHistoryAtimeIndex', 'last_atime')
         self.create_index('CompletionHistoryVisitsIndex', 'visits')
         self.create_index('CompletionHistoryFrecencyIndex', 'frecency')
@@ -160,17 +160,17 @@ class WebHistory(sql.SqlTable):
         # Store the last saved url to avoid duplicate immediate saves.
         self._last_url = None
 
-        recreate_completion = False
+        drop_completion = False
 
         if sql.Query('pragma user_version').run().value() < _USER_VERSION:
-            recreate_completion = True
+            drop_completion = True
 
         self.metainfo = CompletionMetaInfo(parent=self)
         self.completion = CompletionHistory(parent=self,
-                                            recreate=recreate_completion)
+                                            drop=drop_completion)
         if self.metainfo['force_rebuild']:
             self.metainfo['force_rebuild'] = False
-            if not recreate_completion:
+            if not drop_completion:
                 self.completion.delete_all()
 
         if not self.completion:
