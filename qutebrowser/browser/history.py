@@ -229,7 +229,7 @@ class WebHistory(sql.SqlTable):
         # select the latest entry for each url
         q = sql.Query('SELECT url, title, MAX(atime) AS last_atime, '
                       'COUNT(*) AS visits, '
-                      'COUNT(*) * {} + atime AS frecency '
+                      '(COUNT(*) - 1) * {} + atime AS frecency '
                       'FROM History '
                       'WHERE NOT redirect AND url NOT LIKE "qute://back%" '
                       'GROUP BY url ORDER BY last_atime ASC'.format(
