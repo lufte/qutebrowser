@@ -135,6 +135,7 @@
 |<<completion.use_best_match,completion.use_best_match>>|Execute the best-matching command on a partial match.
 |<<completion.web_history.exclude,completion.web_history.exclude>>|A list of patterns which should not be shown in the history.
 |<<completion.web_history.max_items,completion.web_history.max_items>>|Number of URLs to show in the web history.
+|<<completion.web_history.sort_criterion,completion.web_history.sort_criterion>>|How to sort URLs in the web history.
 |<<confirm_quit,confirm_quit>>|Require a confirmation before quitting the application.
 |<<content.autoplay,content.autoplay>>|Automatically start playing `<video>` elements.
 |<<content.cache.appcache,content.cache.appcache>>|Enable support for the HTML 5 web application cache feature.
@@ -1844,6 +1845,20 @@ Number of URLs to show in the web history.
 Type: <<types,Int>>
 
 Default: +pass:[-1]+
+
+[[completion.web_history.sort_criterion]]
+=== completion.web_history.sort_criterion
+How to sort URLs in the web history.
+
+Type: <<types,String>>
+
+Valid values:
+
+ * +recency+: Entries are sorted from most recently visited to least recently visited.
+ * +frequency+: Entries are sorted from most visited to least visited.
+ * +frecency+: Entries are sorted using a combination of recency and frequency.
+
+Default: +pass:[recency]+
 
 [[confirm_quit]]
 === confirm_quit

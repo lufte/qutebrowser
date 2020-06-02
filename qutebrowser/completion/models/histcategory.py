@@ -25,7 +25,7 @@ from PyQt5.QtSql import QSqlQueryModel
 from PyQt5.QtWidgets import QWidget
 
 from qutebrowser.misc import sql
-from qutebrowser.utils import debug, message, log
+from qutebrowser.utils import debug, message, log, utils
 from qutebrowser.config import config
 from qutebrowser.completion.models import util
 
@@ -47,27 +47,6 @@ class HistoryCategory(QSqlQueryModel):
         self.delete_func = delete_func
         self._empty_prefix = None  # type: typing.Optional[str]
 
-    def _atime_expr(self):
-        """If max_items is set, return an expression to limit the query."""
-        max_items = config.val.completion.web_history.max_items
-        # HistoryCategory should not be added to the completion in that case.
-        assert max_items != 0
-
-        if max_items < 0:
-            return ''
-
-        min_atime = sql.Query(' '.join([
-            'SELECT min(last_atime) FROM',
-            '(SELECT last_atime FROM CompletionHistory',
-            'ORDER BY last_atime DESC LIMIT :limit)',
-        ])).run(limit=max_items).value()
-
-        if not min_atime:
-            # if there are no history items, min_atime may be '' (issue #2849)
-            return ''
-
-        return "AND last_atime >= {}".format(min_atime)
-
     def set_pattern(self, pattern):
         """Set the pattern used to filter results.
 
@@ -88,34 +67,46 @@ class HistoryCategory(QSqlQueryModel):
         pattern = pattern.replace('_', '\\_')
         words = ['%{}%'.format(w) for w in pattern.split(' ')]
 
-        # build a where clause to match all of the words in any order
-        # given the search term "a b", the WHERE clause would be:
-        # (url LIKE '%a%' OR title LIKE '%a%') AND
-        # (url LIKE '%b%' OR title LIKE '%b%')
-        where_clause = ' AND '.join(
-            "(url LIKE :{val} escape '\\' OR title LIKE :{val} escape '\\')"
-            .format(val=i) for i in range(len(words)))
-
-        # replace ' in timestamp-format to avoid breaking the query
-        timestamp_format = config.val.completion.timestamp_format or ''
-        timefmt = ("strftime('{}', last_atime, 'unixepoch', 'localtime')"
-                   .format(timestamp_format.replace("'", "`")))
-
         try:
+            # if the number of words changed, we need to generate a new query
+            # otherwise, we can reuse the prepared query for performance
             if (not self._query or
                     len(words) != len(self._query.bound_values())):
-                # if the number of words changed, we need to generate a new
-                # query otherwise, we can reuse the prepared query for
-                # performance
-                self._query = sql.Query(' '.join([
-                    "SELECT url, title, {}".format(timefmt),
-                    "FROM CompletionHistory",
+                sort_crt = config.val.completion.web_history.sort_criterion
+                if sort_crt == 'recency':
+                    sort_column = 'last_atime'
+                elif sort_crt == 'frequency':
+                    sort_column = 'visits'
+                elif sort_crt == 'frecency':
+                    sort_column = 'frecency'
+                else:
+                    raise utils.Unreachable
+                max_items = config.val.completion.web_history.max_items
+                limit_clause = ('LIMIT {}'.format(max_items)
+                                if max_items > 0 else '')
+
+                # build a where clause to match all of the words in any order
+                # given the search term "a b", the WHERE clause would be:
+                # (url LIKE '%a%' OR title LIKE '%a%') AND
+                # (url LIKE '%b%' OR title LIKE '%b%')
+                where_clause = ' AND '.join(
+                    "(url LIKE :{val} escape '\\' OR title LIKE :{val} "
+                    "escape '\\')".format(val=i) for i in range(len(words)))
+
+                # replace ' in timestamp-format to avoid breaking the query
+                timestamp_format = config.val.completion.timestamp_format or ''
+                timefmt = (
+                    "strftime('{}', last_atime, 'unixepoch', 'localtime')"
+                    .format(timestamp_format.replace("'", "`")))
+
+                self._query = sql.Query(
+                    "SELECT url, title, {} "
+                    "FROM CompletionHistory "
                     # the incoming pattern will have literal % and _ escaped we
                     # need to tell SQL to treat '\' as an escape character
-                    'WHERE ({})'.format(where_clause),
-                    self._atime_expr(),
-                    "ORDER BY frecency DESC",
-                ]), forward_only=False)
+                    "WHERE ({}) ORDER BY {} DESC {}"
+                    .format(timefmt, where_clause, sort_column, limit_clause),
+                    forward_only=False)
 
             with debug.log_time('sql', 'Running completion query'):
                 self._query.run(**{

@@ -1000,6 +1000,18 @@ completion.web_history.max_items:
 
     0: no history / -1: unlimited
 
+completion.web_history.sort_criterion:
+  default: recency
+  type:
+    name: String
+    valid_values:
+      - recency: Entries are sorted from most recently visited to least
+            recently visited.
+      - frequency: Entries are sorted from most visited to least visited.
+      - frecency: Entries are sorted using a combination of recency and
+            frequency.
+  desc: How to sort URLs in the web history.
+
 completion.delay:
   default: 0
   type:
