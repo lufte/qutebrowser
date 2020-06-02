@@ -136,7 +136,7 @@ class TestDelete:
 
         completion_diff = completion_before.difference(
             set(web_history.completion))
-        assert completion_diff == {(raw, '', 0)}
+        assert completion_diff == {(raw, '', 0, 1, 0)}
 
 
 class TestAdd:
@@ -167,7 +167,7 @@ class TestAdd:
         if completion_url is None:
             assert not len(web_history.completion)
         else:
-            expected = [(completion_url, title, atime)]
+            expected = [(completion_url, title, atime, 1, atime)]
             assert list(web_history.completion) == expected
 
     def test_no_sql_web_history(self, web_history, monkeypatch):
@@ -186,7 +186,7 @@ class TestAdd:
     @pytest.mark.parametrize('completion', [True, False])
     def test_error(self, monkeypatch, web_history, message_mock, caplog,
                    known_error, completion):
-        def raise_error(url, replace=False):
+        def raise_error(url, replace=False, ignore=False):
             if known_error:
                 raise sql.KnownError("Error message")
             raise sql.BugError("Error message")
@@ -358,22 +358,25 @@ class TestDump:
 class TestRebuild:
 
     def test_delete(self, web_history, stubs):
-        web_history.insert({'url': 'example.com/1', 'title': 'example1',
-                            'redirect': False, 'atime': 1})
-        web_history.insert({'url': 'example.com/1', 'title': 'example1',
-                            'redirect': False, 'atime': 2})
-        web_history.insert({'url': 'example.com/2%203', 'title': 'example2',
-                            'redirect': False, 'atime': 3})
-        web_history.insert({'url': 'example.com/3', 'title': 'example3',
-                            'redirect': True, 'atime': 4})
-        web_history.insert({'url': 'example.com/2 3', 'title': 'example2',
-                            'redirect': False, 'atime': 5})
+        web_history.add_url(QUrl('example.com/1'), title='example1',
+                            redirect=False, atime=1)
+        web_history.add_url(QUrl('example.com/1'), title='example1',
+                            redirect=False, atime=2)
+        web_history.add_url(QUrl('example.com/2%203'), title='example2',
+                            redirect=False, atime=3)
+        web_history.add_url(QUrl('example.com/3'), title='example3',
+                            redirect=True, atime=4)
+        web_history.add_url(QUrl('example.com/2 3'), title='example2',
+                            redirect=False, atime=5)
         web_history.completion.delete_all()
 
         hist2 = history.WebHistory(progress=stubs.FakeHistoryProgress())
+
         assert list(hist2.completion) == [
-            ('example.com/1', 'example1', 2),
-            ('example.com/2 3', 'example2', 5),
+            ('example.com/1', 'example1', 2, 2,
+             2 + history.CompletionHistory.FRECENCY_BONUS),
+            ('example.com/2 3', 'example2', 5, 2,
+             5 + history.CompletionHistory.FRECENCY_BONUS),
         ]
 
     def test_no_rebuild(self, web_history, stubs):
@@ -383,7 +386,7 @@ class TestRebuild:
         web_history.completion.delete('url', 'example.com/2')
 
         hist2 = history.WebHistory(progress=stubs.FakeHistoryProgress())
-        assert list(hist2.completion) == [('example.com/1', '', 1)]
+        assert list(hist2.completion) == [('example.com/1', '', 1, 1, 1)]
 
     def test_user_version(self, web_history, stubs, monkeypatch):
         """Ensure that completion is regenerated if user_version changes."""
@@ -392,14 +395,14 @@ class TestRebuild:
         web_history.completion.delete('url', 'example.com/2')
 
         hist2 = history.WebHistory(progress=stubs.FakeHistoryProgress())
-        assert list(hist2.completion) == [('example.com/1', '', 1)]
+        assert list(hist2.completion) == [('example.com/1', '', 1, 1, 1)]
 
         monkeypatch.setattr(history, '_USER_VERSION',
                             history._USER_VERSION + 1)
         hist3 = history.WebHistory(progress=stubs.FakeHistoryProgress())
         assert list(hist3.completion) == [
-            ('example.com/1', '', 1),
-            ('example.com/2', '', 2),
+            ('example.com/1', '', 1, 1, 1),
+            ('example.com/2', '', 2, 1, 2),
         ]
 
     def test_force_rebuild(self, web_history, stubs):
@@ -409,13 +412,13 @@ class TestRebuild:
         web_history.completion.delete('url', 'example.com/2')
 
         hist2 = history.WebHistory(progress=stubs.FakeHistoryProgress())
-        assert list(hist2.completion) == [('example.com/1', '', 1)]
+        assert list(hist2.completion) == [('example.com/1', '', 1, 1, 1)]
         hist2.metainfo['force_rebuild'] = True
 
         hist3 = history.WebHistory(progress=stubs.FakeHistoryProgress())
         assert list(hist3.completion) == [
-            ('example.com/1', '', 1),
-            ('example.com/2', '', 2),
+            ('example.com/1', '', 1, 1, 1),
+            ('example.com/2', '', 2, 1, 2),
         ]
         assert not hist3.metainfo['force_rebuild']
 
@@ -433,7 +436,7 @@ class TestRebuild:
                             redirect=False, atime=2)
 
         hist2 = history.WebHistory(progress=stubs.FakeHistoryProgress())
-        assert list(hist2.completion) == [('http://example.com', '', 1)]
+        assert list(hist2.completion) == [('http://example.com', '', 1, 1, 1)]
 
     def test_unrelated_config_change(self, config_stub, web_history):
         config_stub.val.history_gap_interval = 1234
