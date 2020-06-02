@@ -229,7 +229,7 @@ class WebHistory(sql.SqlTable):
         # select the latest entry for each url
         q = sql.Query('SELECT url, title, MAX(atime) AS last_atime, '
                       'COUNT(*) AS visits, '
-                      '(COUNT(*) - 1) * {} + atime AS frecency '
+                      '(COUNT(*) - 1) * {} + MAX(atime) AS frecency '
                       'FROM History '
                       'WHERE NOT redirect AND url NOT LIKE "qute://back%" '
                       'GROUP BY url ORDER BY last_atime ASC'.format(
@@ -361,8 +361,8 @@ class WebHistory(sql.SqlTable):
 
             if not result.rows_affected():
                 update = {'visits': 'visits + 1',
-                          'frecency': 'frecency + {}'.format(
-                              self.completion.FRECENCY_BONUS),
+                          'frecency': '{} + visits * {}'.format(
+                              atime, self.completion.FRECENCY_BONUS),
                           'last_atime': atime}
 
                 self.completion.update(update, {'url': 'f_url'}, escape=False)
