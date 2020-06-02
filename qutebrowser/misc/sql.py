@@ -380,25 +380,27 @@ class SqlTable(QObject):
             replace: If true, overwrite rows with a primary key match.
             ignore: If set, ignore conflicts.
         """
-        q = self._insert_query(values, replace)
+        q = self._insert_query(values, replace, ignore)
         q.run_batch(values)
         self.changed.emit()
 
     def update(self, update, where, escape=True):
         """Execute update rows statement.
+
         Args:
             update: column:value dict with new values to set
             where: column:value dict for filtering
             escape: enable new values SQL-escaping
         """
         if escape:
-            u = ', '.join(('{} = :{}'.format(k, k) for k in update.keys()))
+            u = ', '.join(('{k} = :{k}'.format(k=k) for k in update.keys()))
         else:
             u = ', '.join(('{} = {}'.format(k, v) for k, v in update.items()))
 
         s = 'UPDATE {} SET {}'.format(self._name, u)
         if where:
-            w = ' AND '.join(('{} = :w_{}'.format(f, f) for f in where.keys()))
+            w = ' AND '.join(
+                ('{f} = :w_{f}'.format(f=f) for f in where.keys()))
             s += ' WHERE {}'.format(w)
 
         p = update.copy()
