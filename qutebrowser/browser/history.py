@@ -365,7 +365,7 @@ class WebHistory(sql.SqlTable):
                               atime, self.completion.FRECENCY_BONUS),
                           'last_atime': atime}
 
-                self.completion.update(update, {'url': 'f_url'}, escape=False)
+                self.completion.update(update, {'url': f_url}, escape=False)
 
     def _format_url(self, url):
         return url.toString(QUrl.RemovePassword | QUrl.FullyEncoded)
