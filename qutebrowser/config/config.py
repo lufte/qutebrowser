@@ -52,26 +52,26 @@ UNSET = object()
 
 class change_filter:  # noqa: N801,N806 pylint: disable=invalid-name
 
-    """Decorator to filter calls based on a config section/option matching.
+    """Decorator to filter calls based on config sections/options matching.
 
     This could also be a function, but as a class (with a "wrong" name) it's
     much cleaner to implement.
 
     Attributes:
-        _option: An option or prefix to be filtered
+        _options: A list of options or prefixes to be filtered
         _function: Whether a function rather than a method is decorated.
     """
 
-    def __init__(self, option: str, function: bool = False) -> None:
+    def __init__(self, *options: str, function: bool = False) -> None:
         """Save decorator arguments.
 
         Gets called on parse-time with the decorator arguments.
 
         Args:
-            option: The option to be filtered.
+            options: The options to be filtered.
             function: Whether a function rather than a method is decorated.
         """
-        self._option = option
+        self._options = options
         self._function = function
         change_filters.append(self)
 
@@ -80,18 +80,19 @@ class change_filter:  # noqa: N801,N806 pylint: disable=invalid-name
 
         We can't do this in __init__ as configdata isn't ready yet.
         """
-        if (self._option not in configdata.DATA and
-                not configdata.is_valid_prefix(self._option)):
-            raise configexc.NoOptionError(self._option)
+        for option in self._options:
+            if (option not in configdata.DATA and
+                    not configdata.is_valid_prefix(option)):
+                raise configexc.NoOptionError(option)
 
     def check_match(self, option: typing.Optional[str]) -> bool:
         """Check if the given option matches the filter."""
         if option is None:
             # Called directly, not from a config change event.
             return True
-        elif option == self._option:
+        elif option in self._options:
             return True
-        elif option.startswith(self._option + '.'):
+        elif any(option.startswith(o + '.') for o in self._options):
             # prefix match
             return True
         else:
