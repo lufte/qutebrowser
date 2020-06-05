@@ -113,8 +113,6 @@ class CompletionHistory(sql.SqlTable):
 
     """History which only has the newest entry for each URL."""
 
-    FRECENCY_BONUS = 43200  # Seconds in 12 hours
-
     def __init__(self, parent=None, drop=False):
         super().__init__("CompletionHistory", ['url', 'title', 'last_atime',
                                                'visits', 'frecency'],
@@ -202,7 +200,8 @@ class WebHistory(sql.SqlTable):
     def __contains__(self, url):
         return self._contains_query.run(val=url).value()
 
-    @config.change_filter('completion.web_history.exclude')
+    @config.change_filter('completion.web_history.frecency_bonus',
+                          'completion.web_history.exclude')
     def _on_config_changed(self):
         self.metainfo['force_rebuild'] = True
 
@@ -233,7 +232,8 @@ class WebHistory(sql.SqlTable):
                       'FROM History '
                       'WHERE NOT redirect AND url NOT LIKE "qute://back%" '
                       'GROUP BY url ORDER BY last_atime ASC'.format(
-                          self.completion.FRECENCY_BONUS))
+                          config.val.completion.web_history.frecency_bonus))
+
         entries = list(q.run())
 
         if len(entries) > self._PROGRESS_THRESHOLD:
@@ -360,10 +360,14 @@ class WebHistory(sql.SqlTable):
             }, ignore=True)
 
             if not result.rows_affected():
-                update = {'visits': 'visits + 1',
-                          'frecency': '{} + visits * {}'.format(
-                              atime, self.completion.FRECENCY_BONUS),
-                          'last_atime': atime}
+                update = {
+                    'visits': 'visits + 1',
+                    'frecency': '{} + visits * {}'.format(
+                        atime,
+                        config.val.completion.web_history.frecency_bonus
+                    ),
+                    'last_atime': atime
+                }
 
                 self.completion.update(update, {'url': f_url}, escape=False)
 

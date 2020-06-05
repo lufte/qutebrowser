@@ -1012,6 +1012,19 @@ completion.web_history.sort_criterion:
             frequency.
   desc: How to sort URLs in the web history.
 
+completion.web_history.frecency_bonus:
+  default: 43200
+  type:
+    name: Int
+    minval: 0
+  desc: >-
+    How many seconds to award as a bonus per visit for frecency.
+
+    Frecency is calculated as `last_visit_timestamp + (visits - 1)
+    * frecency_bonus`, where `last_visit_timestamp` is measured in seconds
+    since the Epoch. This value defines how much the frecency for a URL will
+    increase with each visit.
+
 completion.delay:
   default: 0
   type:

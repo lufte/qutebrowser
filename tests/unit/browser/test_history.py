@@ -357,7 +357,7 @@ class TestDump:
 
 class TestRebuild:
 
-    def test_delete(self, web_history, stubs):
+    def test_delete(self, config_stub, web_history, stubs):
         web_history.add_url(QUrl('example.com/1'), title='example1',
                             redirect=False, atime=1)
         web_history.add_url(QUrl('example.com/1'), title='example1',
@@ -374,9 +374,9 @@ class TestRebuild:
 
         assert list(hist2.completion) == [
             ('example.com/1', 'example1', 2, 2,
-             2 + history.CompletionHistory.FRECENCY_BONUS),
+             2 + config_stub.val.completion.web_history.frecency_bonus),
             ('example.com/2 3', 'example2', 5, 2,
-             5 + history.CompletionHistory.FRECENCY_BONUS),
+             5 + config_stub.val.completion.web_history.frecency_bonus),
         ]
 
     def test_no_rebuild(self, web_history, stubs):
