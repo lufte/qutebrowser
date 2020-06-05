@@ -74,11 +74,11 @@ class HistoryCategory(QSqlQueryModel):
                     len(words) != len(self._query.bound_values())):
                 sort_crt = config.val.completion.web_history.sort_criterion
                 if sort_crt == 'recency':
-                    sort_column = 'last_atime'
+                    sort_column = 'last_atime DESC'
                 elif sort_crt == 'frequency':
-                    sort_column = 'visits'
+                    sort_column = 'visits DESC, last_atime DESC'
                 elif sort_crt == 'frecency':
-                    sort_column = 'frecency'
+                    sort_column = 'frecency DESC'
                 else:
                     raise utils.Unreachable
                 max_items = config.val.completion.web_history.max_items
@@ -104,7 +104,7 @@ class HistoryCategory(QSqlQueryModel):
                     "FROM CompletionHistory "
                     # the incoming pattern will have literal % and _ escaped we
                     # need to tell SQL to treat '\' as an escape character
-                    "WHERE ({}) ORDER BY {} DESC {}"
+                    "WHERE ({}) ORDER BY {} {}"
                     .format(timefmt, where_clause, sort_column, limit_clause),
                     forward_only=False)
 
