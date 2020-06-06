@@ -351,25 +351,20 @@ class WebHistory(sql.SqlTable):
                 return
 
             f_url = self._format_completion_url(url)
-            result = self.completion.insert({
+            result = self.completion.upsert({
                 'url': f_url,
                 'title': title,
                 'last_atime': atime,
                 'visits': 1,
                 'frecency': atime,
-            }, ignore=True)
-
-            if not result.rows_affected():
-                update = {
-                    'visits': 'visits + 1',
-                    'frecency': '{} + visits * {}'.format(
-                        atime,
-                        config.val.completion.web_history.frecency_bonus
-                    ),
-                    'last_atime': atime
-                }
-
-                self.completion.update(update, {'url': f_url}, escape=False)
+            }, update={
+                'visits': 'visits + 1',
+                'frecency': '{} + visits * {}'.format(
+                    atime,
+                    config.val.completion.web_history.frecency_bonus
+                ),
+                'last_atime': atime
+            }, where={'url': f_url}, conflict_target='url')
 
     def _format_url(self, url):
         return url.toString(QUrl.RemovePassword | QUrl.FullyEncoded)
