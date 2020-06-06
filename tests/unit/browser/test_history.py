@@ -259,6 +259,41 @@ class TestAdd:
         web_history.add_from_tab(QUrl(url), QUrl(url), 'title')
         assert list(web_history) == hist
 
+    @pytest.mark.parametrize(
+        'urls, expected', [
+            (['http://a', 'http://b', 'http://a'],
+             {'http://a': 2, 'http://b': 1}),
+            (['http://a/a a', 'http://b', 'http://a/a%20a'],
+             {'http://a/a a': 2, 'http://b': 1}),
+        ]
+    )
+    def test_visits(self, web_history, urls, expected):
+        for url in urls:
+            web_history.add_url(QUrl(url))
+        completion = {i.url: i.visits for i in web_history.completion}
+        assert completion == expected
+
+    @pytest.mark.parametrize(
+        'urls, expected', [
+            ([('http://a', 1)], [('http://a', lambda b: 1)]),
+            ([('http://a', 1), ('http://a', 3), ('http://a', 8)],
+             [('http://a', lambda b: 2 * b + 8)]),
+            ([('http://a', 1), ('http://b/b b', 2), ('http://a', 3),
+              ('http://b/b%20b', 3), ('http://b/b b', 4), ('http://b/b b', 9)],
+             [('http://a', lambda b: b + 3),
+              ('http://b/b b', lambda b: 3 * b + 9)]),
+        ]
+    )
+    def test_frecency(self, config_stub, web_history, urls, expected):
+        calculated_expected = {
+            k: v(config_stub.val.completion.web_history.frecency_bonus)
+            for k, v in expected
+        }
+        for url, atime in urls:
+            web_history.add_url(QUrl(url), atime=atime)
+        completion = {i.url: i.frecency for i in web_history.completion}
+        assert completion == calculated_expected
+
 
 class TestHistoryInterface:
 
@@ -457,6 +492,30 @@ class TestRebuild:
         assert progress._value == 2
         assert progress._finished
         assert progress._started == patch_threshold
+
+    def test_frecency_visits_rebuild(self, stubs, config_stub):
+        """Ensure frecency and visits are calculated correctly on rebuild"""
+        bonus = config_stub.val.completion.web_history.frecency_bonus
+        web_history = history.WebHistory(progress=stubs.FakeHistoryProgress())
+        web_history.add_url(QUrl('http://a'), atime=1)
+        web_history.add_url(QUrl('http://b'), atime=2)
+        web_history.add_url(QUrl('http://b'), atime=3)
+        web_history.add_url(QUrl('http://c'), atime=4)
+        web_history.add_url(QUrl('http://c'), atime=4)
+        web_history.add_url(QUrl('http://c'), atime=4)
+        web_history.add_url(QUrl('http://c'), atime=4)
+        web_history.add_url(QUrl('http://c'), atime=4)
+        web_history.add_url(QUrl('http://c'), atime=4)
+        web_history.add_url(QUrl('http://c'), atime=5)
+        web_history.add_url(QUrl('http://c'), atime=50, redirect=True)
+        expected = {
+            ('http://a', '', 1, 1, 1),
+            ('http://b', '', 3, 2, bonus + 3),
+            ('http://c', '', 5, 7, bonus * 6 + 5),
+        }
+        assert set(web_history.completion) == expected
+        web_history._rebuild_completion()
+        assert set(web_history.completion) == expected
 
 
 class TestCompletionMetaInfo:
