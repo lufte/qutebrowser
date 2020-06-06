@@ -148,22 +148,19 @@ def test_insert_batch_replace(qtbot):
                             'lucky': [True, True]})
 
 
-def test_update(qtbot):
-    table = sql.SqlTable('Foo', ['a', 'b', 'c'])
-    table.insert({'a': 10, 'b': 10, 'c': 10})
-    table.insert({'a': 20, 'b': 20, 'c': 20})
+def test_upsert(qtbot):
+    table = sql.SqlTable('Foo', ['a', 'b', 'c'], constraints={'a': 'UNIQUE'})
+    with qtbot.waitSignal(table.changed):
+        table.upsert({'a': 10, 'b': 10, 'c': 10}, conflict_target='a',
+                     update={'b': 'b + 10', 'c': 'c * c'}, where={'a': 10})
+
+    assert list(table) == [(10, 10, 10)]
 
     with qtbot.waitSignal(table.changed):
-        table.update({'a': 11, 'b': 12, 'c': 13}, {'a': 10, 'b': 10})
-    with qtbot.waitSignal(table.changed):
-        table.update({'a': 21}, {'c': 20})
+        table.upsert({'a': 10, 'b': 10, 'c': 10}, conflict_target='a',
+                     update={'b': 'b + 10', 'c': 'c * c'}, where={'a': 10})
 
-    assert list(table) == [(11, 12, 13), (21, 20, 20)]
-
-    with qtbot.waitSignal(table.changed):
-        table.update({'a': 'a * a', 'b': 'b + 3'}, {'a': 11, 'b': 12}, False)
-
-    assert list(table) == [(121, 15, 13), (21, 20, 20)]
+    assert list(table) == [(10, 20, 100)]
 
 
 def test_iter():

@@ -186,13 +186,13 @@ class TestAdd:
     @pytest.mark.parametrize('completion', [True, False])
     def test_error(self, monkeypatch, web_history, message_mock, caplog,
                    known_error, completion):
-        def raise_error(url, replace=False, ignore=False):
+        def raise_error(*args, **kwargs):
             if known_error:
                 raise sql.KnownError("Error message")
             raise sql.BugError("Error message")
 
         if completion:
-            monkeypatch.setattr(web_history.completion, 'insert', raise_error)
+            monkeypatch.setattr(web_history.completion, 'upsert', raise_error)
         else:
             monkeypatch.setattr(web_history, 'insert', raise_error)
 
@@ -494,7 +494,7 @@ class TestRebuild:
         assert progress._started == patch_threshold
 
     def test_frecency_visits_rebuild(self, stubs, config_stub):
-        """Ensure frecency and visits are calculated correctly on rebuild"""
+        """Ensure frecency and visits are calculated correctly on rebuild."""
         bonus = config_stub.val.completion.web_history.frecency_bonus
         web_history = history.WebHistory(progress=stubs.FakeHistoryProgress())
         web_history.add_url(QUrl('http://a'), atime=1)
