@@ -457,6 +457,25 @@ class TestRebuild:
         ]
         assert not hist3.metainfo['force_rebuild']
 
+    def test_user_version_and_force_rebuild(self, web_history, stubs,
+                                            monkeypatch):
+        """Ensure that completion is regenerated if both conditions are met."""
+        web_history.add_url(QUrl('example.com/1'), redirect=False, atime=1)
+        web_history.add_url(QUrl('example.com/2'), redirect=False, atime=2)
+        web_history.completion.delete('url', 'example.com/2')
+
+        hist2 = history.WebHistory(progress=stubs.FakeHistoryProgress())
+        assert list(hist2.completion) == [('example.com/1', '', 1, 1, 1)]
+
+        hist2.metainfo['force_rebuild'] = True
+        monkeypatch.setattr(history, '_USER_VERSION',
+                            history._USER_VERSION + 1)
+        hist3 = history.WebHistory(progress=stubs.FakeHistoryProgress())
+        assert list(hist3.completion) == [
+            ('example.com/1', '', 1, 1, 1),
+            ('example.com/2', '', 2, 1, 2),
+        ]
+
     def test_exclude(self, config_stub, web_history, stubs):
         """Ensure that patterns in completion.web_history.exclude are ignored.
 
