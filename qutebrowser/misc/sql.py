@@ -400,8 +400,7 @@ class SqlTable(QObject):
             w = ' AND '.join(('{f} = :w_{f}'.format(f=f) for f in where))
 
         s = ("INSERT INTO {table} ({columns}) values({params}) "
-             "ON CONFLICT({target}) DO "
-             "UPDATE SET {update} WHERE {where}".format(
+             "ON CONFLICT({target}) DO UPDATE SET {update} WHERE {where}".format(
                  table=self._name, columns=', '.join(sorted_keys),
                  params=params, update=u, where=w, target=conflict_target))
 

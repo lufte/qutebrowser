@@ -351,7 +351,7 @@ class WebHistory(sql.SqlTable):
                 return
 
             f_url = self._format_completion_url(url)
-            self.completion.upsert({
+            result = self.completion.upsert({
                 'url': f_url,
                 'title': title,
                 'last_atime': atime,

@@ -186,13 +186,13 @@ class TestAdd:
     @pytest.mark.parametrize('completion', [True, False])
     def test_error(self, monkeypatch, web_history, message_mock, caplog,
                    known_error, completion):
-        def raise_error(*args, **kwargs):
+        def raise_error(url, replace=False, ignore=False):
             if known_error:
                 raise sql.KnownError("Error message")
             raise sql.BugError("Error message")
 
         if completion:
-            monkeypatch.setattr(web_history.completion, 'upsert', raise_error)
+            monkeypatch.setattr(web_history.completion, 'insert', raise_error)
         else:
             monkeypatch.setattr(web_history, 'insert', raise_error)
 
