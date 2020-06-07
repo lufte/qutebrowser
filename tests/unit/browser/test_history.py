@@ -284,11 +284,13 @@ class TestAdd:
               ('http://b/b b', lambda b: 3 * b + 9)]),
         ]
     )
-    def test_frecency(self, config_stub, web_history, urls, expected):
-        calculated_expected = {
-            k: v(config_stub.val.completion.web_history.frecency_bonus)
-            for k, v in expected
-        }
+    @pytest.mark.parametrize(
+        'frecency_bonus', [0, 1, 2, 100]
+    )
+    def test_frecency(self, config_stub, web_history, urls, expected,
+                      frecency_bonus):
+        config_stub.val.completion.web_history.frecency_bonus = frecency_bonus
+        calculated_expected = {k: v(frecency_bonus) for k, v in expected}
         for url, atime in urls:
             web_history.add_url(QUrl(url), atime=atime)
         completion = {i.url: i.frecency for i in web_history.completion}
