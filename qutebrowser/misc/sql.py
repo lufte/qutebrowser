@@ -348,64 +348,67 @@ class SqlTable(QObject):
             raise KeyError('No row with {} = "{}"'.format(field, value))
         self.changed.emit()
 
-    def _insert_query(self, values, replace):
-        # Don't rely on the order of the items in a dict
-        sorted_keys = list(values)
-
-        params = ', '.join(':{}'.format(key) for key in sorted_keys)
-        verb = "REPLACE" if replace else "INSERT"
+    def _insert_query(self, values, replace=False, ignore=False):
+        params = ', '.join(':{}'.format(key) for key in values)
+        verb = 'INSERT'
+        if replace:
+            verb += ' OR REPLACE'
+        elif ignore:
+            verb += ' OR IGNORE'
         return Query("{verb} INTO {table} ({columns}) values({params})".format(
-            verb=verb, table=self._name, params=params,
-            columns=', '.join(keys for keys in sorted_keys)))
+            verb=verb, table=self._name, columns=', '.join(values),
+            params=params))
 
-    def insert(self, values, replace=False):
+    def insert(self, values, replace=False, ignore=False):
         """Append a row to the table.
 
         Args:
             values: A dict with a value to insert for each field name.
             replace: If set, replace existing values.
+            ignore: If set, ignore conflicts.
         """
-        q = self._insert_query(values, replace)
-        q.run(**values)
+        q = self._insert_query(values, replace, ignore)
+        result = q.run(**values)
         self.changed.emit()
+        return result
 
-    def insert_batch(self, values, replace=False):
+    def insert_batch(self, values, replace=False, ignore=False):
         """Performantly append multiple rows to the table.
 
         Args:
             values: A dict with a list of values to insert for each field name.
             replace: If true, overwrite rows with a primary key match.
+            ignore: If set, ignore conflicts.
         """
-        q = self._insert_query(values, replace)
+        q = self._insert_query(values, replace, ignore)
         q.run_batch(values)
         self.changed.emit()
 
-    def upsert(self, values, conflict_target, update, where):
-        """Insert a row and update on conflict.
+    def update(self, update, where, escape=True):
+        """Execute update rows statement.
 
         Args:
-            values: A dict with a value to insert for each field name.
-            conflict_target: Uniqueness constraint that can trigger the upsert.
-            update: A dict with values to update on conflict. These values are
-                    not escaped.
-            where: A dict with values to filter by on the update.
+            update: column:value dict with new values to set
+            where: column:value dict for filtering
+            escape: enable new values SQL-escaping
         """
-        # Don't rely on the order of the items in a dict
-        sorted_keys = list(values)
+        if escape:
+            u = ', '.join(('{k} = :{k}'.format(k=k) for k in update.keys()))
+        else:
+            u = ', '.join(('{} = {}'.format(k, v) for k, v in update.items()))
 
-        params = ', '.join(':{}'.format(key) for key in sorted_keys)
-        u = ', '.join(('{} = {}'.format(k, v) for k, v in update.items()))
-        w = ''
+        s = 'UPDATE {} SET {}'.format(self._name, u)
         if where:
-            w = ' AND '.join(('{f} = :w_{f}'.format(f=f) for f in where))
+            w = ' AND '.join(
+                ('{f} = :w_{f}'.format(f=f) for f in where.keys()))
+            s += ' WHERE {}'.format(w)
 
-        s = ("INSERT INTO {table} ({columns}) values({params}) "
-             "ON CONFLICT({target}) DO UPDATE SET {update} WHERE {where}".format(
-                 table=self._name, columns=', '.join(sorted_keys),
-                 params=params, update=u, where=w, target=conflict_target))
+        p = update.copy()
+        p.update({'w_' + k: v for k, v in where.items()})
 
-        Query(s).run(**values, **{'w_' + k: v for k, v in where.items()})
+        result = Query(s).run(**p)
         self.changed.emit()
+        return result
 
     def delete_all(self):
         """Remove all rows from the table."""
