@@ -21,7 +21,7 @@
 
 import os.path
 import collections
-import typing
+from typing import MutableMapping
 
 from PyQt5.QtCore import pyqtSlot, QObject, QTimer
 
@@ -113,7 +113,7 @@ class SaveManager(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.saveables = collections.OrderedDict(
-        )  # type: typing.MutableMapping[str, Saveable]
+        )  # type: MutableMapping[str, Saveable]
         self._save_timer = usertypes.Timer(self, name='save-timer')
         self._save_timer.timeout.connect(self.autosave)
         self._set_autosave_interval()

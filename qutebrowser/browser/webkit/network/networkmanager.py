@@ -21,7 +21,7 @@
 
 import collections
 import html
-import typing
+from typing import Dict, MutableMapping, Optional, Sequence, TYPE_CHECKING
 
 import attr
 from PyQt5.QtCore import (pyqtSlot, pyqtSignal, QCoreApplication, QUrl,
@@ -40,12 +40,12 @@ from qutebrowser.browser.webkit.network import (webkitqutescheme, networkreply,
                                                 filescheme)
 from qutebrowser.misc import objects
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from qutebrowser.mainwindow import prompt
 
 
 HOSTBLOCK_ERROR_STRING = '%HOSTBLOCK%'
-_proxy_auth_cache = {}  # type: typing.Dict[ProxyId, prompt.AuthInfo]
+_proxy_auth_cache = {}  # type: Dict[ProxyId, prompt.AuthInfo]
 
 
 @attr.s(frozen=True)
@@ -123,8 +123,8 @@ def init():
         QSslSocket.setDefaultCiphers(good_ciphers)
 
 
-_SavedErrorsType = typing.MutableMapping[urlutils.HostTupleType,
-                                         typing.Sequence[QSslError]]
+_SavedErrorsType = MutableMapping[urlutils.HostTupleType,
+                                         Sequence[QSslError]]
 
 
 class NetworkManager(QNetworkAccessManager):
@@ -242,7 +242,7 @@ class NetworkManager(QNetworkAccessManager):
             ' / '.join(str(err) for err in errors)))
         try:
             host_tpl = urlutils.host_tuple(
-                reply.url())  # type: typing.Optional[urlutils.HostTupleType]
+                reply.url())  # type: Optional[urlutils.HostTupleType]
         except ValueError:
             host_tpl = None
             is_accepted = False

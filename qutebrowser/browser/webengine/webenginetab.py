@@ -23,7 +23,7 @@ import math
 import functools
 import re
 import html as html_utils
-import typing
+from typing import Optional, Union, cast
 
 from PyQt5.QtCore import (pyqtSignal, pyqtSlot, Qt, QPoint, QPointF, QUrl,
                           QTimer, QObject)
@@ -931,7 +931,7 @@ class _WebEnginePermissions(QObject):
     def __init__(self, tab, parent=None):
         super().__init__(parent)
         self._tab = tab
-        self._widget = typing.cast(QWidget, None)
+        self._widget = cast(QWidget, None)
 
         try:
             self._options.update({
@@ -1087,7 +1087,7 @@ class _WebEngineScripts(QObject):
     def __init__(self, tab, parent=None):
         super().__init__(parent)
         self._tab = tab
-        self._widget = typing.cast(QWidget, None)
+        self._widget = cast(QWidget, None)
         self._greasemonkey = greasemonkey.gm_manager
 
     def connect_signals(self):
@@ -1380,7 +1380,7 @@ class WebEngineTab(browsertab.AbstractTab):
         self.backend = usertypes.Backend.QtWebEngine
         self._child_event_filter = None
         self._saved_zoom = None
-        self._reload_url = None  # type: typing.Optional[QUrl]
+        self._reload_url = None  # type: Optional[QUrl]
         self._scripts.init()
 
     def _set_widget(self, widget):
@@ -1447,7 +1447,7 @@ class WebEngineTab(browsertab.AbstractTab):
             self._widget.page().toHtml(callback)
 
     def run_js_async(self, code, callback=None, *, world=None):
-        world_id_type = typing.Union[QWebEngineScript.ScriptWorldId, int]
+        world_id_type = Union[QWebEngineScript.ScriptWorldId, int]
         if world is None:
             world_id = QWebEngineScript.ApplicationWorld  # type: world_id_type
         elif isinstance(world, int):

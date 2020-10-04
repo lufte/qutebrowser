@@ -32,7 +32,7 @@ import textwrap
 import urllib
 import collections
 import base64
-import typing
+from typing import Callable, Dict, List, Optional, Sequence, Tuple, Union
 from typing import TypeVar, Callable, Union, Tuple
 
 try:
@@ -112,7 +112,7 @@ class add_handler:  # noqa: N801,N806 pylint: disable=invalid-name
 
     def __init__(self, name):
         self._name = name
-        self._function = None  # type: typing.Optional[typing.Callable]
+        self._function = None  # type: Optional[Callable]
 
     def __call__(self, function: _Handler) -> _Handler:
         self._function = function
@@ -125,7 +125,7 @@ class add_handler:  # noqa: N801,N806 pylint: disable=invalid-name
         return self._function(*args, **kwargs)
 
 
-def data_for_url(url: QUrl) -> typing.Tuple[str, bytes]:
+def data_for_url(url: QUrl) -> Tuple[str, bytes]:
     """Get the data to show for the given URL.
 
     Args:
@@ -200,7 +200,7 @@ def qute_bookmarks(_url: QUrl) -> _HandlerRet:
 def qute_tabs(_url: QUrl) -> _HandlerRet:
     """Handler for qute://tabs. Display information about all open tabs."""
     tabs = collections.defaultdict(
-        list)  # type: typing.Dict[str, typing.List[typing.Tuple[str, str]]]
+        list)  # type: Dict[str, List[Tuple[str, str]]]
     for win_id, window in objreg.window_registry.items():
         if sip.isdeleted(window):
             continue
@@ -221,7 +221,7 @@ def qute_tabs(_url: QUrl) -> _HandlerRet:
 def history_data(
         start_time: float,
         offset: int = None
-) -> typing.Sequence[typing.Dict[str, typing.Union[str, int]]]:
+) -> Sequence[Dict[str, Union[str, int]]]:
     """Return history data.
 
     Arguments:
@@ -355,7 +355,7 @@ def qute_gpl(_url: QUrl) -> _HandlerRet:
     return 'text/html', utils.read_file('html/license.html')
 
 
-def _asciidoc_fallback_path(html_path: str) -> typing.Optional[str]:
+def _asciidoc_fallback_path(html_path: str) -> Optional[str]:
     """Fall back to plaintext asciidoc if the HTML is unavailable."""
     path = html_path.replace('.html', '.asciidoc')
     try:

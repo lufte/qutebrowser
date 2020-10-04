@@ -21,7 +21,7 @@
 
 import os
 import sys
-import typing
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple, Union
 import argparse
 
 from qutebrowser.config import config
@@ -29,7 +29,7 @@ from qutebrowser.misc import objects
 from qutebrowser.utils import usertypes, qtutils, utils
 
 
-def qt_args(namespace: argparse.Namespace) -> typing.List[str]:
+def qt_args(namespace: argparse.Namespace) -> List[str]:
     """Get the Qt QApplication arguments based on an argparse namespace.
 
     Args:
@@ -61,7 +61,7 @@ def qt_args(namespace: argparse.Namespace) -> typing.List[str]:
     return argv
 
 
-def _darkmode_settings() -> typing.Iterator[typing.Tuple[str, str]]:
+def _darkmode_settings() -> Iterator[Tuple[str, str]]:
     """Get necessary blink settings to configure dark mode for QtWebEngine."""
     if not config.val.colors.webpage.darkmode.enabled:
         return
@@ -96,18 +96,18 @@ def _darkmode_settings() -> typing.Iterator[typing.Tuple[str, str]]:
         False: 'false',
     }
 
-    _setting_description_type = typing.Tuple[
+    _setting_description_type = Tuple[
         str,  # qutebrowser option name
         str,  # darkmode setting name
         # Mapping from the config value to a string (or something convertable
         # to a string) which gets passed to Chromium.
-        typing.Optional[typing.Mapping[typing.Any, typing.Union[str, int]]],
+        Optional[Mapping[Any, Union[str, int]]],
     ]
     if qtutils.version_check('5.15', compiled=False):
         settings = [
             ('enabled', 'Enabled', bools),
             ('algorithm', 'InversionAlgorithm', algorithms),
-        ]  # type: typing.List[_setting_description_type]
+        ]  # type: List[_setting_description_type]
         mandatory_setting = 'enabled'
     else:
         settings = [
@@ -146,8 +146,8 @@ def _darkmode_settings() -> typing.Iterator[typing.Tuple[str, str]]:
 
 
 def _qtwebengine_enabled_features(
-        feature_flags: typing.Sequence[str],
-) -> typing.Iterator[str]:
+        feature_flags: Sequence[str],
+) -> Iterator[str]:
     """Get --enable-features flags for QtWebEngine.
 
     Args:
@@ -198,8 +198,8 @@ def _qtwebengine_enabled_features(
 
 def _qtwebengine_args(
         namespace: argparse.Namespace,
-        feature_flags: typing.Sequence[str],
-) -> typing.Iterator[str]:
+        feature_flags: Sequence[str],
+) -> Iterator[str]:
     """Get the QtWebEngine arguments to use based on the config."""
     is_qt_514 = (qtutils.version_check('5.14', compiled=False) and
                  not qtutils.version_check('5.15', compiled=False))
@@ -277,7 +277,7 @@ def _qtwebengine_args(
             'never': '--no-referrers',
             'same-domain': '--reduced-referrer-granularity',
         }
-    }  # type: typing.Dict[str, typing.Dict[typing.Any, typing.Optional[str]]]
+    }  # type: Dict[str, Dict[Any, Optional[str]]]
 
     if not qtutils.version_check('5.11'):
         # On Qt 5.11, we can control this via QWebEngineSettings

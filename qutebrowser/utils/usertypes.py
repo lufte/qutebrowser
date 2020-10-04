@@ -21,7 +21,7 @@
 
 import operator
 import enum
-import typing
+from typing import Any, Optional, Sequence, TypeVar, Union
 
 import attr
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QObject, QTimer
@@ -30,7 +30,7 @@ from PyQt5.QtCore import QUrl
 from qutebrowser.utils import log, qtutils, utils
 
 
-_T = typing.TypeVar('_T')
+_T = TypeVar('_T')
 
 
 class Unset:
@@ -46,7 +46,7 @@ class Unset:
 UNSET = Unset()
 
 
-class NeighborList(typing.Sequence[_T]):
+class NeighborList(Sequence[_T]):
 
     """A list of items which saves its current position.
 
@@ -62,8 +62,8 @@ class NeighborList(typing.Sequence[_T]):
 
     Modes = enum.Enum('Modes', ['edge', 'exception'])
 
-    def __init__(self, items: typing.Sequence[_T] = None,
-                 default: typing.Union[_T, Unset] = UNSET,
+    def __init__(self, items: Sequence[_T] = None,
+                 default: Union[_T, Unset] = UNSET,
                  mode: Modes = Modes.exception) -> None:
         """Constructor.
 
@@ -77,19 +77,19 @@ class NeighborList(typing.Sequence[_T]):
         if not isinstance(mode, self.Modes):
             raise TypeError("Mode {} is not a Modes member!".format(mode))
         if items is None:
-            self._items = []  # type: typing.Sequence[_T]
+            self._items = []  # type: Sequence[_T]
         else:
             self._items = list(items)
         self._default = default
 
         if not isinstance(default, Unset):
             idx = self._items.index(default)
-            self._idx = idx  # type: typing.Optional[int]
+            self._idx = idx  # type: Optional[int]
         else:
             self._idx = None
 
         self._mode = mode
-        self.fuzzyval = None  # type: typing.Optional[int]
+        self.fuzzyval = None  # type: Optional[int]
 
     def __getitem__(self, key: int) -> _T:  # type: ignore[override]
         return self._items[key]
@@ -158,7 +158,7 @@ class NeighborList(typing.Sequence[_T]):
         return new
 
     @property
-    def items(self) -> typing.Sequence[_T]:
+    def items(self) -> Sequence[_T]:
         """Getter for items, which should not be set."""
         return self._items
 
@@ -360,13 +360,13 @@ class Question(QObject):
 
     def __init__(self, parent: QObject = None) -> None:
         super().__init__(parent)
-        self.mode = None  # type: typing.Optional[PromptMode]
-        self.default = None  # type: typing.Union[bool, str, None]
-        self.title = None  # type: typing.Optional[str]
-        self.text = None  # type: typing.Optional[str]
-        self.url = None  # type: typing.Optional[str]
-        self.option = None  # type: typing.Optional[bool]
-        self.answer = None  # type: typing.Union[str, bool, None]
+        self.mode = None  # type: Optional[PromptMode]
+        self.default = None  # type: Union[bool, str, None]
+        self.title = None  # type: Optional[str]
+        self.text = None  # type: Optional[str]
+        self.url = None  # type: Optional[str]
+        self.option = None  # type: Optional[bool]
+        self.answer = None  # type: Union[str, bool, None]
         self.is_aborted = False
         self.interrupted = False
 
@@ -440,7 +440,7 @@ class AbstractCertificateErrorWrapper:
 
     """A wrapper over an SSL/certificate error."""
 
-    def __init__(self, error: typing.Any) -> None:
+    def __init__(self, error: Any) -> None:
         self._error = error
 
     def __str__(self) -> str:

@@ -150,7 +150,7 @@ def multitype_conv(param, types, value, *, str_choices=None):
     types = list(set(types))
     if str in types:
         # Make sure str is always the last type in the list, so e.g. '23' gets
-        # returned as 23 if we have typing.Union[str, int]
+        # returned as 23 if we have Union[str, int]
         types.remove(str)
         types.append(str)
 

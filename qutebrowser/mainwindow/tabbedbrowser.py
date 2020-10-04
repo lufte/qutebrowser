@@ -22,7 +22,7 @@
 import collections
 import functools
 import weakref
-import typing
+from typing import Any, Deque, List, Mapping, MutableMapping, MutableSequence, Optional, Tuple
 import datetime
 
 import attr
@@ -71,10 +71,10 @@ class TabDeque:
             size = None
         self._stack = collections.deque(
             maxlen=size
-        )  # type: typing.Deque[weakref.ReferenceType[QWidget]]
+        )  # type: Deque[weakref.ReferenceType[QWidget]]
         # Items that have been removed from the primary stack.
         self._stack_deleted = [
-        ]  # type: typing.List[weakref.ReferenceType[QWidget]]
+        ]  # type: List[weakref.ReferenceType[QWidget]]
         self._ignore_next = False
         self._keep_deleted_next = False
 
@@ -95,7 +95,7 @@ class TabDeque:
 
         Throws IndexError on failure.
         """
-        tab = None  # type: typing.Optional[QWidget]
+        tab = None  # type: Optional[QWidget]
         while tab is None or tab.pending_removal or tab is cur_tab:
             tab = self._stack.pop()()
         self._stack_deleted.append(weakref.ref(cur_tab))
@@ -107,7 +107,7 @@ class TabDeque:
 
         Throws IndexError on failure.
         """
-        tab = None  # type: typing.Optional[QWidget]
+        tab = None  # type: Optional[QWidget]
         while tab is None or tab.pending_removal or tab is cur_tab:
             tab = self._stack_deleted.pop()()
         # On next tab-switch, current tab will be added to stack as normal.
@@ -228,16 +228,16 @@ class TabbedBrowser(QWidget):
         # line.
         self.undo_stack = (
             collections.deque()
-        )  # type: typing.MutableSequence[typing.MutableSequence[_UndoEntry]]
+        )  # type: MutableSequence[MutableSequence[_UndoEntry]]
         self._update_stack_size()
         self._filter = signalfilter.SignalFilter(win_id, self)
         self._now_focused = None
         self.search_text = None
-        self.search_options = {}  # type: typing.Mapping[str, typing.Any]
+        self.search_options = {}  # type: Mapping[str, Any]
         self._local_marks = {
-        }  # type: typing.MutableMapping[QUrl, typing.MutableMapping[str, int]]
+        }  # type: MutableMapping[QUrl, MutableMapping[str, int]]
         self._global_marks = {
-        }  # type: typing.MutableMapping[str, typing.Tuple[int, QUrl]]
+        }  # type: MutableMapping[str, Tuple[int, QUrl]]
         self.default_window_icon = self.widget.window().windowIcon()
         self.is_private = private
         self.tab_deque = TabDeque()

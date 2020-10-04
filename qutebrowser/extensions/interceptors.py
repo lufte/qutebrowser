@@ -19,7 +19,7 @@
 
 """Infrastructure for intercepting requests."""
 
-import typing
+from typing import Callable, List, Optional
 import enum
 
 import attr
@@ -76,7 +76,7 @@ class Request:
     """A request which can be intercepted/blocked."""
 
     #: The URL of the page being shown.
-    first_party_url = attr.ib()  # type: typing.Optional[QUrl]
+    first_party_url = attr.ib()  # type: Optional[QUrl]
 
     #: The URL of the file being requested.
     request_url = attr.ib()  # type: QUrl
@@ -84,7 +84,7 @@ class Request:
     is_blocked = attr.ib(False)  # type: bool
 
     #: The resource type of the request. None if not supported on this backend.
-    resource_type = attr.ib(None)  # type: typing.Optional[ResourceType]
+    resource_type = attr.ib(None)  # type: Optional[ResourceType]
 
     def block(self) -> None:
         """Block this request."""
@@ -107,10 +107,10 @@ class Request:
 
 
 #: Type annotation for an interceptor function.
-InterceptorType = typing.Callable[[Request], None]
+InterceptorType = Callable[[Request], None]
 
 
-_interceptors = []  # type: typing.List[InterceptorType]
+_interceptors = []  # type: List[InterceptorType]
 
 
 def register(interceptor: InterceptorType) -> None:

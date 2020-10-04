@@ -23,7 +23,7 @@ import binascii
 import base64
 import itertools
 import functools
-import typing
+from typing import List, MutableSequence, Optional, Tuple, cast
 
 from PyQt5.QtCore import (pyqtSignal, pyqtSlot, QRect, QPoint, QTimer, Qt,
                           QCoreApplication, QEventLoop, QByteArray)
@@ -121,7 +121,7 @@ def get_target_window():
         return None
 
 
-_OverlayInfoType = typing.Tuple[QWidget, pyqtSignal, bool, str]
+_OverlayInfoType = Tuple[QWidget, pyqtSignal, bool, str]
 
 
 class MainWindow(QWidget):
@@ -190,8 +190,8 @@ class MainWindow(QWidget):
 
     def __init__(self, *,
                  private: bool,
-                 geometry: typing.Optional[QByteArray] = None,
-                 parent: typing.Optional[QWidget] = None) -> None:
+                 geometry: Optional[QByteArray] = None,
+                 parent: Optional[QWidget] = None) -> None:
         """Create a new main window.
 
         Args:
@@ -208,7 +208,7 @@ class MainWindow(QWidget):
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.palette().setColor(QPalette.Window, Qt.transparent)
-        self._overlays = []  # type: typing.MutableSequence[_OverlayInfoType]
+        self._overlays = []  # type: MutableSequence[_OverlayInfoType]
         self.win_id = next(win_id_gen)
         self.registry = objreg.ObjectRegistry()
         objreg.window_registry[self.win_id] = self
@@ -420,7 +420,7 @@ class MainWindow(QWidget):
         self._vbox.removeWidget(self.tabbed_browser.widget)
         self._vbox.removeWidget(self._downloadview)
         self._vbox.removeWidget(self.status)
-        widgets = [self.tabbed_browser.widget]  # type: typing.List[QWidget]
+        widgets = [self.tabbed_browser.widget]  # type: List[QWidget]
 
         downloads_position = config.val.downloads.position
         if downloads_position == 'top':
@@ -582,7 +582,7 @@ class MainWindow(QWidget):
         refresh_window = self.isVisible()
         if hidden:
             window_flags |= Qt.CustomizeWindowHint | Qt.NoDropShadowWindowHint
-        self.setWindowFlags(typing.cast(Qt.WindowFlags, window_flags))
+        self.setWindowFlags(cast(Qt.WindowFlags, window_flags))
         if refresh_window:
             self.show()
 

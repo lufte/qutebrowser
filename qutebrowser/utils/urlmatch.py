@@ -31,7 +31,7 @@ https://chromium.googlesource.com/chromium/src/+/757854e199e159523e7789de5cb2f6b
 
 import ipaddress
 import fnmatch
-import typing
+from typing import Any, Optional, Tuple
 import urllib.parse
 
 from PyQt5.QtCore import QUrl
@@ -74,10 +74,10 @@ class UrlPattern:
         self._pattern = pattern
         self._match_all = False
         self._match_subdomains = False  # type: bool
-        self._scheme = None  # type: typing.Optional[str]
-        self.host = None  # type: typing.Optional[str]
-        self._path = None  # type: typing.Optional[str]
-        self._port = None  # type: typing.Optional[int]
+        self._scheme = None  # type: Optional[str]
+        self.host = None  # type: Optional[str]
+        self._path = None  # type: Optional[str]
+        self._port = None  # type: Optional[int]
 
         # > The special pattern <all_urls> matches any URL that starts with a
         # > permitted scheme.
@@ -104,7 +104,7 @@ class UrlPattern:
         self._init_path(parsed)
         self._init_port(parsed)
 
-    def _to_tuple(self) -> typing.Tuple:
+    def _to_tuple(self) -> Tuple:
         """Get a pattern with information used for __eq__/__hash__."""
         return (self._match_all, self._match_subdomains, self._scheme,
                 self.host, self._path, self._port)
@@ -112,7 +112,7 @@ class UrlPattern:
     def __hash__(self) -> int:
         return hash(self._to_tuple())
 
-    def __eq__(self, other: typing.Any) -> bool:
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, UrlPattern):
             return NotImplemented
         return self._to_tuple() == other._to_tuple()

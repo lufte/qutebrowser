@@ -19,7 +19,7 @@
 
 """An HTTP client based on QNetworkAccessManager."""
 
-import typing
+from typing import MutableMapping
 import functools
 import urllib.request
 import urllib.parse
@@ -67,7 +67,7 @@ class HTTPClient(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._nam = QNetworkAccessManager(self)
-        self._timers = {}  # type: typing.MutableMapping[QNetworkReply, QTimer]
+        self._timers = {}  # type: MutableMapping[QNetworkReply, QTimer]
 
     def post(self, url, data=None):
         """Create a new POST request.

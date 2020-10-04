@@ -21,7 +21,7 @@
 
 import base64
 import binascii
-import typing
+from typing import Optional, cast
 import enum
 
 from PyQt5.QtWidgets import QWidget
@@ -119,10 +119,10 @@ class AbstractWebInspector(QWidget):
                  win_id: int,
                  parent: QWidget = None) -> None:
         super().__init__(parent)
-        self._widget = typing.cast(QWidget, None)
+        self._widget = cast(QWidget, None)
         self._layout = miscwidgets.WrapperLayout(self)
         self._splitter = splitter
-        self._position = None  # type: typing.Optional[Position]
+        self._position = None  # type: Optional[Position]
         self._win_id = win_id
 
         self._event_filter = _EventFilter(parent=self)
@@ -163,7 +163,7 @@ class AbstractWebInspector(QWidget):
             modeman.enter(self._win_id, usertypes.KeyMode.insert,
                           reason='Inspector clicked', only_if_normal=True)
 
-    def set_position(self, position: typing.Optional[Position]) -> None:
+    def set_position(self, position: Optional[Position]) -> None:
         """Set the position of the inspector.
 
         If the position is None, the last known position is used.

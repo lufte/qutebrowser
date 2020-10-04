@@ -19,7 +19,7 @@
 
 """The tab widget used for TabbedBrowser from browser.py."""
 
-import typing
+from typing import Optional, cast
 import functools
 import contextlib
 
@@ -355,7 +355,7 @@ class TabWidget(QTabWidget):
 
     def setTabIcon(self, idx: int, icon: QIcon) -> None:
         """Always show tab icons for pinned tabs in some circumstances."""
-        tab = typing.cast(typing.Optional[browsertab.AbstractTab],
+        tab = cast(Optional[browsertab.AbstractTab],
                           self.widget(idx))
         if (icon.isNull() and
                 config.cache['tabs.favicons.show'] != 'never' and

@@ -23,7 +23,7 @@ import os
 import os.path
 import itertools
 import urllib
-import typing
+from typing import Any, Iterable, MutableMapping, MutableSequence, Optional, Union, cast
 import glob
 import shutil
 
@@ -40,7 +40,7 @@ from qutebrowser.mainwindow import mainwindow
 from qutebrowser.qt import sip
 
 
-_JsonType = typing.MutableMapping[str, typing.Any]
+_JsonType = MutableMapping[str, Any]
 
 
 class Sentinel:
@@ -49,9 +49,9 @@ class Sentinel:
 
 
 default = Sentinel()
-session_manager = typing.cast('SessionManager', None)
+session_manager = cast('SessionManager', None)
 
-ArgType = typing.Union[str, Sentinel]
+ArgType = Union[str, Sentinel]
 
 
 def init(parent=None):
@@ -80,7 +80,7 @@ def init(parent=None):
     session_manager = SessionManager(base_path, parent)
 
 
-def shutdown(session: typing.Optional[ArgType], last_window: bool) -> None:
+def shutdown(session: Optional[ArgType], last_window: bool) -> None:
     """Handle a shutdown by saving sessions and removing the autosave file."""
     if session_manager is None:
         return  # type: ignore
@@ -153,7 +153,7 @@ class SessionManager(QObject):
 
     def __init__(self, base_path, parent=None):
         super().__init__(parent)
-        self.current = None  # type: typing.Optional[str]
+        self.current = None  # type: Optional[str]
         self._base_path = base_path
         self._last_window_session = None
         self.did_load = False
@@ -265,7 +265,7 @@ class SessionManager(QObject):
         """Get a dict with data for all windows/tabs."""
         data = {'windows': []}  # type: _JsonType
         if only_window is not None:
-            winlist = [only_window]  # type: typing.Iterable[int]
+            winlist = [only_window]  # type: Iterable[int]
         else:
             winlist = objreg.window_registry
 
@@ -377,7 +377,7 @@ class SessionManager(QObject):
     def _load_tab(self, new_tab, data):  # noqa: C901
         """Load yaml data into a newly opened tab."""
         entries = []
-        lazy_load = []  # type: typing.MutableSequence[_JsonType]
+        lazy_load = []  # type: MutableSequence[_JsonType]
         # use len(data['history'])
         # -> dropwhile empty if not session.lazy_session
         lazy_index = len(data['history'])
@@ -439,7 +439,7 @@ class SessionManager(QObject):
                 last_visited = QDateTime.fromString(
                     histentry.get("last_visited"),
                     Qt.ISODate,
-                )  # type: typing.Optional[QDateTime]
+                )  # type: Optional[QDateTime]
             else:
                 last_visited = None
 

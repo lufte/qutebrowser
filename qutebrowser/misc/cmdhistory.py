@@ -19,7 +19,7 @@
 
 """Command history for the status bar."""
 
-import typing
+from typing import MutableSequence
 
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, QObject
 
@@ -60,7 +60,7 @@ class History(QObject):
         super().__init__(parent)
         self._tmphist = None
         if history is None:
-            self.history = []  # type: typing.MutableSequence[str]
+            self.history = []  # type: MutableSequence[str]
         else:
             self.history = history
 
@@ -84,7 +84,7 @@ class History(QObject):
         if text:
             items = [
                 e for e in self.history
-                if e.startswith(text)]  # type: typing.MutableSequence[str]
+                if e.startswith(text)]  # type: MutableSequence[str]
         else:
             items = self.history
         if not items:

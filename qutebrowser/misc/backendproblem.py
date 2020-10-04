@@ -25,7 +25,7 @@ import functools
 import html
 import enum
 import shutil
-import typing
+from typing import Any, List, Sequence, Tuple
 import argparse
 
 import attr
@@ -57,13 +57,13 @@ class _Button:
 
     text = attr.ib()  # type: str
     setting = attr.ib()  # type: str
-    value = attr.ib()  # type: typing.Any
+    value = attr.ib()  # type: Any
     default = attr.ib(default=False)  # type: bool
 
 
 def _other_backend(
         backend: usertypes.Backend
-) -> typing.Tuple[usertypes.Backend, str]:
+) -> Tuple[usertypes.Backend, str]:
     """Get the other backend enum/setting for a given backend."""
     other_backend = {
         usertypes.Backend.QtWebKit: usertypes.Backend.QtWebEngine,
@@ -103,7 +103,7 @@ class _Dialog(QDialog):
     def __init__(self, *, because: str,
                  text: str,
                  backend: usertypes.Backend,
-                 buttons: typing.Sequence[_Button] = None,
+                 buttons: Sequence[_Button] = None,
                  parent: QWidget = None) -> None:
         super().__init__(parent)
         vbox = QVBoxLayout(self)
@@ -181,7 +181,7 @@ class _BackendProblemChecker:
         self._save_manager = save_manager
         self._no_err_windows = no_err_windows
 
-    def _show_dialog(self, *args: typing.Any, **kwargs: typing.Any) -> None:
+    def _show_dialog(self, *args: Any, **kwargs: Any) -> None:
         """Show a dialog for a backend problem."""
         if self._no_err_windows:
             text = _error_text(*args, **kwargs)
@@ -255,7 +255,7 @@ class _BackendProblemChecker:
 
         raise utils.Unreachable
 
-    def _xwayland_options(self) -> typing.Tuple[str, typing.List[_Button]]:
+    def _xwayland_options(self) -> Tuple[str, List[_Button]]:
         """Get buttons/text for a possible XWayland solution."""
         buttons = []
         text = "<p>You can work around this in one of the following ways:</p>"

@@ -19,7 +19,7 @@
 
 """QtWebKit specific part of the web element API."""
 
-import typing
+from typing import Iterator, List, Optional, Set, TYPE_CHECKING, cast
 
 from PyQt5.QtCore import QRect, Qt
 from PyQt5.QtWebKit import QWebElement, QWebSettings
@@ -29,7 +29,7 @@ from qutebrowser.config import config
 from qutebrowser.utils import log, utils, javascript, usertypes
 from qutebrowser.browser import webelem
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from qutebrowser.browser.webkit import webkittab
 
 
@@ -80,7 +80,7 @@ class WebKitElement(webelem.AbstractWebElement):
         self._check_vanished()
         return self._elem.hasAttribute(key)
 
-    def __iter__(self) -> typing.Iterator[str]:
+    def __iter__(self) -> Iterator[str]:
         self._check_vanished()
         yield from self._elem.attributeNames()
 
@@ -101,7 +101,7 @@ class WebKitElement(webelem.AbstractWebElement):
         self._check_vanished()
         return self._elem.geometry()
 
-    def classes(self) -> typing.Set[str]:
+    def classes(self) -> Set[str]:
         self._check_vanished()
         return set(self._elem.classes())
 
@@ -174,21 +174,21 @@ class WebKitElement(webelem.AbstractWebElement):
             this.dispatchEvent(event);
         """.format(javascript.to_js(text)))
 
-    def _parent(self) -> typing.Optional['WebKitElement']:
+    def _parent(self) -> Optional['WebKitElement']:
         """Get the parent element of this element."""
         self._check_vanished()
-        elem = typing.cast(typing.Optional[QWebElement],
+        elem = cast(Optional[QWebElement],
                            self._elem.parent())
         if elem is None or elem.isNull():
             return None
 
-        if typing.TYPE_CHECKING:
+        if TYPE_CHECKING:
             # pylint: disable=used-before-assignment
             assert isinstance(self._tab, webkittab.WebKitTab)
 
         return WebKitElement(elem, tab=self._tab)
 
-    def _rect_on_view_js(self) -> typing.Optional[QRect]:
+    def _rect_on_view_js(self) -> Optional[QRect]:
         """Javascript implementation for rect_on_view."""
         # FIXME:qtwebengine maybe we can reuse this?
         rects = self._elem.evaluateJavaScript("this.getClientRects()")
@@ -228,7 +228,7 @@ class WebKitElement(webelem.AbstractWebElement):
         return None
 
     def _rect_on_view_python(self,
-                             elem_geometry: typing.Optional[QRect]) -> QRect:
+                             elem_geometry: Optional[QRect]) -> QRect:
         """Python implementation for rect_on_view."""
         if elem_geometry is None:
             geometry = self._elem.geometry()
@@ -332,7 +332,7 @@ class WebKitElement(webelem.AbstractWebElement):
         return all([visible_on_screen, visible_in_frame])
 
     def remove_blank_target(self) -> None:
-        elem = self  # type: typing.Optional[WebKitElement]
+        elem = self  # type: Optional[WebKitElement]
         for _ in range(5):
             if elem is None:
                 break
@@ -377,7 +377,7 @@ class WebKitElement(webelem.AbstractWebElement):
         super()._click_fake_event(click_target)
 
 
-def get_child_frames(startframe: QWebFrame) -> typing.List[QWebFrame]:
+def get_child_frames(startframe: QWebFrame) -> List[QWebFrame]:
     """Get all children recursively of a given QWebFrame.
 
     Loosely based on http://blog.nextgenetics.net/?e=64
@@ -391,7 +391,7 @@ def get_child_frames(startframe: QWebFrame) -> typing.List[QWebFrame]:
     results = []
     frames = [startframe]
     while frames:
-        new_frames = []  # type: typing.List[QWebFrame]
+        new_frames = []  # type: List[QWebFrame]
         for frame in frames:
             results.append(frame)
             new_frames += frame.childFrames()

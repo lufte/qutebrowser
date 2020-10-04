@@ -20,7 +20,7 @@
 """A HintManager to draw hints over links."""
 
 import collections
-import typing
+from typing import Callable, Dict, Iterable, Iterator, List, Mapping, MutableSequence, Optional, Sequence, Set, TYPE_CHECKING
 import functools
 import os
 import re
@@ -38,7 +38,7 @@ from qutebrowser.browser import webelem, history
 from qutebrowser.commands import userscripts, runners
 from qutebrowser.api import cmdutils
 from qutebrowser.utils import usertypes, log, qtutils, message, objreg, utils
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from qutebrowser.browser import browsertab
 
 
@@ -164,8 +164,8 @@ class HintContext:
         group: The group of web elements to hint.
     """
 
-    all_labels = attr.ib(attr.Factory(list))  # type: typing.List[HintLabel]
-    labels = attr.ib(attr.Factory(dict))  # type: typing.Dict[str, HintLabel]
+    all_labels = attr.ib(attr.Factory(list))  # type: List[HintLabel]
+    labels = attr.ib(attr.Factory(dict))  # type: Dict[str, HintLabel]
     target = attr.ib(None)  # type: Target
     baseurl = attr.ib(None)  # type: QUrl
     to_follow = attr.ib(None)  # type: str
@@ -173,13 +173,13 @@ class HintContext:
     first_run = attr.ib(True)  # type: bool
     add_history = attr.ib(False)  # type: bool
     filterstr = attr.ib(None)  # type: str
-    args = attr.ib(attr.Factory(list))  # type: typing.List[str]
+    args = attr.ib(attr.Factory(list))  # type: List[str]
     tab = attr.ib(None)  # type: browsertab.AbstractTab
     group = attr.ib(None)  # type: str
     hint_mode = attr.ib(None)  # type: str
     first = attr.ib(False)  # type: bool
 
-    def get_args(self, urlstr: str) -> typing.Sequence[str]:
+    def get_args(self, urlstr: str) -> Sequence[str]:
         """Get the arguments, with {hint-url} replaced by the given URL."""
         args = []
         for arg in self.args:
@@ -336,8 +336,8 @@ class HintActions:
         commandrunner.run_safely('spawn ' + ' '.join(args))
 
 
-_ElemsType = typing.Sequence[webelem.AbstractWebElement]
-_HintStringsType = typing.MutableSequence[str]
+_ElemsType = Sequence[webelem.AbstractWebElement]
+_HintStringsType = MutableSequence[str]
 
 
 class HintManager(QObject):
@@ -379,7 +379,7 @@ class HintManager(QObject):
         """Constructor."""
         super().__init__(parent)
         self._win_id = win_id
-        self._context = None  # type: typing.Optional[HintContext]
+        self._context = None  # type: Optional[HintContext]
         self._word_hinter = WordHinter()
 
         self._actions = HintActions(win_id)
@@ -513,7 +513,7 @@ class HintManager(QObject):
         """
         buckets = [
             [] for i in range(length)
-        ]  # type: typing.Sequence[_HintStringsType]
+        ]  # type: Sequence[_HintStringsType]
         for i, hint in enumerate(hints):
             buckets[i % len(buckets)].append(hint)
         result = []  # type: _HintStringsType
@@ -541,7 +541,7 @@ class HintManager(QObject):
             A hint string.
         """
         base = len(chars)
-        hintstr = []  # type: typing.MutableSequence[str]
+        hintstr = []  # type: MutableSequence[str]
         remainder = 0
         while True:
             remainder = number % base
@@ -771,7 +771,7 @@ class HintManager(QObject):
             error_cb=lambda err: message.error(str(err)),
             only_visible=True)
 
-    def _get_hint_mode(self, mode: typing.Optional[str]) -> str:
+    def _get_hint_mode(self, mode: Optional[str]) -> str:
         """Get the hinting mode to use based on a mode argument."""
         if mode is None:
             return config.val.hints.mode
@@ -783,7 +783,7 @@ class HintManager(QObject):
             raise cmdutils.CommandError("Invalid mode: {}".format(e))
         return mode
 
-    def current_mode(self) -> typing.Optional[str]:
+    def current_mode(self) -> Optional[str]:
         """Return the currently active hinting mode (or None otherwise)."""
         if self._context is None:
             return None
@@ -794,7 +794,7 @@ class HintManager(QObject):
             self,
             keystr: str = "",
             filterstr: str = "",
-            visible: typing.Mapping[str, HintLabel] = None
+            visible: Mapping[str, HintLabel] = None
     ) -> None:
         """Handle the auto_follow option."""
         assert self._context is not None
@@ -856,7 +856,7 @@ class HintManager(QObject):
                 pass
         self._handle_auto_follow(keystr=keystr)
 
-    def filter_hints(self, filterstr: typing.Optional[str]) -> None:
+    def filter_hints(self, filterstr: Optional[str]) -> None:
         """Filter displayed hints according to a text.
 
         Args:
@@ -1027,7 +1027,7 @@ class WordHinter:
 
     def __init__(self) -> None:
         # will be initialized on first use.
-        self.words = set()  # type: typing.Set[str]
+        self.words = set()  # type: Set[str]
         self.dictionary = None
 
     def ensure_initialized(self) -> None:
@@ -1059,9 +1059,9 @@ class WordHinter:
 
     def extract_tag_words(
             self, elem: webelem.AbstractWebElement
-    ) -> typing.Iterator[str]:
+    ) -> Iterator[str]:
         """Extract tag words form the given element."""
-        _extractor_type = typing.Callable[[webelem.AbstractWebElement], str]
+        _extractor_type = Callable[[webelem.AbstractWebElement], str]
         attr_extractors = {
             "alt": lambda elem: elem["alt"],
             "name": lambda elem: elem["name"],
@@ -1070,7 +1070,7 @@ class WordHinter:
             "src": lambda elem: elem["src"].split('/')[-1],
             "href": lambda elem: elem["href"].split('/')[-1],
             "text": str,
-        }  # type: typing.Mapping[str, _extractor_type]
+        }  # type: Mapping[str, _extractor_type]
 
         extractable_attrs = collections.defaultdict(list, {
             "img": ["alt", "title", "src"],
@@ -1086,8 +1086,8 @@ class WordHinter:
 
     def tag_words_to_hints(
             self,
-            words: typing.Iterable[str]
-    ) -> typing.Iterator[str]:
+            words: Iterable[str]
+    ) -> Iterator[str]:
         """Take words and transform them to proper hints if possible."""
         for candidate in words:
             if not candidate:
@@ -1098,20 +1098,20 @@ class WordHinter:
             if 4 < match.end() - match.start() < 8:
                 yield candidate[match.start():match.end()].lower()
 
-    def any_prefix(self, hint: str, existing: typing.Iterable[str]) -> bool:
+    def any_prefix(self, hint: str, existing: Iterable[str]) -> bool:
         return any(hint.startswith(e) or e.startswith(hint) for e in existing)
 
     def filter_prefixes(
             self,
-            hints: typing.Iterable[str],
-            existing: typing.Iterable[str]
-    ) -> typing.Iterator[str]:
+            hints: Iterable[str],
+            existing: Iterable[str]
+    ) -> Iterator[str]:
         """Filter hints which don't start with the given prefix."""
         return (h for h in hints if not self.any_prefix(h, existing))
 
     def new_hint_for(self, elem: webelem.AbstractWebElement,
-                     existing: typing.Iterable[str],
-                     fallback: typing.Iterable[str]) -> typing.Optional[str]:
+                     existing: Iterable[str],
+                     fallback: Iterable[str]) -> Optional[str]:
         """Return a hint for elem, not conflicting with the existing."""
         new = self.tag_words_to_hints(self.extract_tag_words(elem))
         new_no_prefixes = self.filter_prefixes(new, existing)
@@ -1135,7 +1135,7 @@ class WordHinter:
         """
         self.ensure_initialized()
         hints = []
-        used_hints = set()  # type: typing.Set[str]
+        used_hints = set()  # type: Set[str]
         words = iter(self.words)
         for elem in elems:
             hint = self.new_hint_for(elem, used_hints, words)

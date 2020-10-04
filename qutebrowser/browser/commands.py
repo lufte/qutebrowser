@@ -22,7 +22,7 @@
 import os.path
 import shlex
 import functools
-import typing
+from typing import Callable, Dict, Union, cast
 
 from PyQt5.QtWidgets import QApplication, QTabBar
 from PyQt5.QtCore import pyqtSlot, Qt, QUrl, QEvent, QUrlQuery
@@ -607,7 +607,7 @@ class CommandDispatcher:
                                            inc_or_dec='decrement'),
             'increment': functools.partial(navigate.incdec,
                                            inc_or_dec='increment'),
-        }  # type: typing.Dict[str, typing.Callable]
+        }  # type: Dict[str, Callable]
 
         try:
             if where in ['prev', 'next']:
@@ -948,7 +948,7 @@ class CommandDispatcher:
     @cmdutils.argument('index', choices=['last', 'stack-next', 'stack-prev'],
                        completion=miscmodels.tab_focus)
     @cmdutils.argument('count', value=cmdutils.Value.count)
-    def tab_focus(self, index: typing.Union[str, int] = None,
+    def tab_focus(self, index: Union[str, int] = None,
                   count: int = None, no_last: bool = False) -> None:
         """Select the tab given as argument/[count].
 
@@ -992,7 +992,7 @@ class CommandDispatcher:
     @cmdutils.register(instance='command-dispatcher', scope='window')
     @cmdutils.argument('index', choices=['+', '-'])
     @cmdutils.argument('count', value=cmdutils.Value.count)
-    def tab_move(self, index: typing.Union[str, int] = None,
+    def tab_move(self, index: Union[str, int] = None,
                  count: int = None) -> None:
         """Move the current tab according to the argument and [count].
 
@@ -1430,7 +1430,7 @@ class CommandDispatcher:
         query = QUrlQuery()
         query.addQueryItem('level', level)
         if plain:
-            query.addQueryItem('plain', typing.cast(str, None))
+            query.addQueryItem('plain', cast(str, None))
 
         if logfilter:
             try:
@@ -1651,7 +1651,7 @@ class CommandDispatcher:
                url: bool = False,
                quiet: bool = False,
                *,
-               world: typing.Union[usertypes.JsWorld, int] = None) -> None:
+               world: Union[usertypes.JsWorld, int] = None) -> None:
         """Evaluate a JavaScript string.
 
         Args:

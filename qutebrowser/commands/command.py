@@ -22,7 +22,7 @@
 import inspect
 import collections
 import traceback
-import typing
+from typing import Any, MutableMapping, MutableSequence, Tuple, Union, UnionMeta
 
 import attr
 
@@ -117,12 +117,12 @@ class Command:
                                  default=argparser.SUPPRESS, nargs=0,
                                  help=argparser.SUPPRESS)
         self.opt_args = collections.OrderedDict(
-        )  # type: typing.MutableMapping[str, typing.Tuple[str, str]]
+        )  # type: MutableMapping[str, Tuple[str, str]]
         self.namespace = None
         self._count = None
         self.pos_args = [
-        ]  # type: typing.MutableSequence[typing.Tuple[str, str]]
-        self.flags_with_args = []  # type: typing.MutableSequence[str]
+        ]  # type: MutableSequence[Tuple[str, str]]
+        self.flags_with_args = []  # type: MutableSequence[str]
         self._has_vararg = False
 
         # This is checked by future @cmdutils.argument calls so they fail
@@ -410,9 +410,9 @@ class Command:
             # Python 3.5.2
             # pylint: disable=no-member,useless-suppression
             is_union = isinstance(
-                typ, typing.UnionMeta)  # type: ignore[attr-defined]
+                typ, UnionMeta)  # type: ignore[attr-defined]
         else:
-            is_union = getattr(typ, '__origin__', None) is typing.Union
+            is_union = getattr(typ, '__origin__', None) is Union
 
         if is_union:
             # this is... slightly evil, I know
@@ -497,8 +497,8 @@ class Command:
         Return:
             An (args, kwargs) tuple.
         """
-        args = []  # type: typing.Any
-        kwargs = {}  # type: typing.MutableMapping[str, typing.Any]
+        args = []  # type: Any
+        kwargs = {}  # type: MutableMapping[str, Any]
         signature = inspect.signature(self.handler)
 
         for i, param in enumerate(signature.parameters.values()):

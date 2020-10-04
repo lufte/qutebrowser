@@ -20,7 +20,7 @@
 """Code for :undo --window."""
 
 import collections
-import typing
+from typing import MutableSequence, cast
 
 import attr
 from PyQt5.QtCore import QObject
@@ -30,7 +30,7 @@ from qutebrowser.config import config
 from qutebrowser.mainwindow import mainwindow
 
 
-instance = typing.cast('WindowUndoManager', None)
+instance = cast('WindowUndoManager', None)
 
 
 @attr.s
@@ -50,7 +50,7 @@ class WindowUndoManager(QObject):
         super().__init__(parent)
         self._undos = (
             collections.deque()
-        )  # type: typing.MutableSequence[_WindowUndoEntry]
+        )  # type: MutableSequence[_WindowUndoEntry]
         QApplication.instance().window_closing.connect(self._on_window_closing)
         config.instance.changed.connect(self._on_config_changed)
 

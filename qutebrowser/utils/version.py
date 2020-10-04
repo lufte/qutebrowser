@@ -30,7 +30,7 @@ import collections
 import enum
 import datetime
 import getpass
-import typing
+from typing import Mapping, Optional, Sequence, Tuple, cast
 import functools
 
 import attr
@@ -82,9 +82,9 @@ class DistributionInfo:
 
     """Information about the running distribution."""
 
-    id = attr.ib()  # type: typing.Optional[str]
+    id = attr.ib()  # type: Optional[str]
     parsed = attr.ib()  # type: Distribution
-    version = attr.ib()  # type: typing.Optional[typing.Tuple[str, ...]]
+    version = attr.ib()  # type: Optional[Tuple[str, ...]]
     pretty = attr.ib()  # type: str
 
 
@@ -95,7 +95,7 @@ Distribution = enum.Enum(
                      'kde_flatpak'])
 
 
-def distribution() -> typing.Optional[DistributionInfo]:
+def distribution() -> Optional[DistributionInfo]:
     """Get some information about the running Linux distribution.
 
     Returns:
@@ -125,7 +125,7 @@ def distribution() -> typing.Optional[DistributionInfo]:
     if 'VERSION_ID' in info:
         dist_version = pkg_resources.parse_version(
             info['VERSION_ID']
-        )  # type: typing.Optional[typing.Tuple[str, ...]]
+        )  # type: Optional[Tuple[str, ...]]
     else:
         dist_version = None
 
@@ -154,7 +154,7 @@ def is_sandboxed() -> bool:
     return current_distro.parsed == Distribution.kde_flatpak
 
 
-def _git_str() -> typing.Optional[str]:
+def _git_str() -> Optional[str]:
     """Try to find out git version.
 
     Return:
@@ -188,7 +188,7 @@ def _call_git(gitpath: str, *args: str) -> str:
         stdout=subprocess.PIPE).stdout.decode('UTF-8').strip()
 
 
-def _git_str_subprocess(gitpath: str) -> typing.Optional[str]:
+def _git_str_subprocess(gitpath: str) -> Optional[str]:
     """Try to get the git commit ID and timestamp by calling git.
 
     Args:
@@ -210,7 +210,7 @@ def _git_str_subprocess(gitpath: str) -> typing.Optional[str]:
         return None
 
 
-def _release_info() -> typing.Sequence[typing.Tuple[str, str]]:
+def _release_info() -> Sequence[Tuple[str, str]]:
     """Try to gather distribution release information.
 
     Return:
@@ -234,7 +234,7 @@ def _release_info() -> typing.Sequence[typing.Tuple[str, str]]:
     return data
 
 
-def _module_versions() -> typing.Sequence[str]:
+def _module_versions() -> Sequence[str]:
     """Get versions of optional modules.
 
     Return:
@@ -253,7 +253,7 @@ def _module_versions() -> typing.Sequence[str]:
         ('PyQt5.QtWebEngineWidgets', []),
         ('PyQt5.QtWebEngine', ['PYQT_WEBENGINE_VERSION_STR']),
         ('PyQt5.QtWebKitWidgets', []),
-    ])  # type: typing.Mapping[str, typing.Sequence[str]]
+    ])  # type: Mapping[str, Sequence[str]]
     for modname, attributes in modules.items():
         try:
             module = importlib.import_module(modname)
@@ -273,7 +273,7 @@ def _module_versions() -> typing.Sequence[str]:
     return lines
 
 
-def _path_info() -> typing.Mapping[str, str]:
+def _path_info() -> Mapping[str, str]:
     """Get info about important path names.
 
     Return:
@@ -292,7 +292,7 @@ def _path_info() -> typing.Mapping[str, str]:
     return info
 
 
-def _os_info() -> typing.Sequence[str]:
+def _os_info() -> Sequence[str]:
     """Get operating system info.
 
     Return:
@@ -554,16 +554,16 @@ class OpenGLInfo:
     # The name of the vendor. Examples:
     # - nouveau
     # - "Intel Open Source Technology Center", "Intel", "Intel Inc."
-    vendor = attr.ib(None)  # type: typing.Optional[str]
+    vendor = attr.ib(None)  # type: Optional[str]
 
     # The OpenGL version as a string. See tests for examples.
-    version_str = attr.ib(None)  # type: typing.Optional[str]
+    version_str = attr.ib(None)  # type: Optional[str]
 
     # The parsed version as a (major, minor) tuple of ints
-    version = attr.ib(None)  # type: typing.Optional[typing.Tuple[int, ...]]
+    version = attr.ib(None)  # type: Optional[Tuple[int, ...]]
 
     # The vendor specific information following the version number
-    vendor_specific = attr.ib(None)  # type: typing.Optional[str]
+    vendor_specific = attr.ib(None)  # type: Optional[str]
 
     def __str__(self) -> str:
         if self.gles:
@@ -601,7 +601,7 @@ class OpenGLInfo:
 
 
 @functools.lru_cache(maxsize=1)
-def opengl_info() -> typing.Optional[OpenGLInfo]:  # pragma: no cover
+def opengl_info() -> Optional[OpenGLInfo]:  # pragma: no cover
     """Get the OpenGL vendor used.
 
     This returns a string such as 'nouveau' or
@@ -619,7 +619,7 @@ def opengl_info() -> typing.Optional[OpenGLInfo]:  # pragma: no cover
         vendor, version = override.split(', ', maxsplit=1)
         return OpenGLInfo.parse(vendor=vendor, version=version)
 
-    old_context = typing.cast(typing.Optional[QOpenGLContext],
+    old_context = cast(Optional[QOpenGLContext],
                               QOpenGLContext.currentContext())
     old_surface = None if old_context is None else old_context.surface()
 

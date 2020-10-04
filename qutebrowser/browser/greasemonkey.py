@@ -26,7 +26,7 @@ import fnmatch
 import functools
 import glob
 import textwrap
-import typing
+from typing import List, Sequence, cast
 
 import attr
 from PyQt5.QtCore import pyqtSignal, QObject, QUrl
@@ -39,7 +39,7 @@ from qutebrowser.browser import downloads
 from qutebrowser.misc import objects
 
 
-gm_manager = typing.cast('GreasemonkeyManager', None)
+gm_manager = cast('GreasemonkeyManager', None)
 
 
 def _scripts_dir():
@@ -54,10 +54,10 @@ class GreasemonkeyScript:
     def __init__(self, properties, code,  # noqa: C901 pragma: no mccabe
                  filename=None):
         self._code = code
-        self.includes = []  # type: typing.Sequence[str]
-        self.matches = []  # type: typing.Sequence[str]
-        self.excludes = []  # type: typing.Sequence[str]
-        self.requires = []  # type: typing.Sequence[str]
+        self.includes = []  # type: Sequence[str]
+        self.matches = []  # type: Sequence[str]
+        self.excludes = []  # type: Sequence[str]
+        self.requires = []  # type: Sequence[str]
         self.description = None
         self.namespace = None
         self.run_at = None
@@ -259,11 +259,11 @@ class GreasemonkeyManager(QObject):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._run_start = []  # type: typing.List[GreasemonkeyScript]
-        self._run_end = []  # type: typing.List[GreasemonkeyScript]
-        self._run_idle = []  # type: typing.List[GreasemonkeyScript]
+        self._run_start = []  # type: List[GreasemonkeyScript]
+        self._run_end = []  # type: List[GreasemonkeyScript]
+        self._run_idle = []  # type: List[GreasemonkeyScript]
         self._in_progress_dls = [
-        ]  # type: typing.List[downloads.AbstractDownloadItem]
+        ]  # type: List[downloads.AbstractDownloadItem]
 
         self.load_scripts()
 

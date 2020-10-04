@@ -27,7 +27,7 @@ import textwrap
 import traceback
 import configparser
 import contextlib
-import typing
+from typing import Any, Dict, Iterable, Iterator, List, Mapping, MutableMapping, Optional, TYPE_CHECKING, cast
 import re
 
 import yaml
@@ -39,15 +39,15 @@ from qutebrowser.config import (configexc, config, configdata, configutils,
 from qutebrowser.keyinput import keyutils
 from qutebrowser.utils import standarddir, utils, qtutils, log, urlmatch
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from qutebrowser.misc import savemanager
 
 
 # The StateConfig instance
-state = typing.cast('StateConfig', None)
+state = cast('StateConfig', None)
 
 
-_SettingsType = typing.Dict[str, typing.Dict[str, typing.Any]]
+_SettingsType = Dict[str, Dict[str, Any]]
 
 
 class StateConfig(configparser.ConfigParser):
@@ -117,7 +117,7 @@ class YamlConfig(QObject):
                                       'autoconfig.yml')
         self._dirty = False
 
-        self._values = {}  # type: typing.Dict[str, configutils.Values]
+        self._values = {}  # type: Dict[str, configutils.Values]
         for name, opt in configdata.DATA.items():
             self._values[name] = configutils.Values(opt)
 
@@ -130,7 +130,7 @@ class YamlConfig(QObject):
         """
         save_manager.add_saveable('yaml-config', self._save, self.changed)
 
-    def __iter__(self) -> typing.Iterator[configutils.Values]:
+    def __iter__(self) -> Iterator[configutils.Values]:
         """Iterate over configutils.Values items."""
         yield from self._values.values()
 
@@ -168,9 +168,9 @@ class YamlConfig(QObject):
             utils.yaml_dump(data, f)
 
     def _pop_object(self,
-                    yaml_data: typing.Any,
+                    yaml_data: Any,
                     key: str,
-                    typ: type) -> typing.Any:
+                    typ: type) -> Any:
         """Get a global object from the given data."""
         if not isinstance(yaml_data, dict):
             desc = configexc.ConfigErrorDesc("While loading data",
@@ -227,19 +227,19 @@ class YamlConfig(QObject):
         self._validate_names(settings)
         self._build_values(settings)
 
-    def _load_settings_object(self, yaml_data: typing.Any) -> '_SettingsType':
+    def _load_settings_object(self, yaml_data: Any) -> '_SettingsType':
         """Load the settings from the settings: key."""
         return self._pop_object(yaml_data, 'settings', dict)
 
     def _load_legacy_settings_object(self,
-                                     yaml_data: typing.Any) -> '_SettingsType':
+                                     yaml_data: Any) -> '_SettingsType':
         data = self._pop_object(yaml_data, 'global', dict)
         settings = {}
         for name, value in data.items():
             settings[name] = {'global': value}
         return settings
 
-    def _build_values(self, settings: typing.Mapping) -> None:
+    def _build_values(self, settings: Mapping) -> None:
         """Build up self._values from the values in the given dict."""
         errors = []
         for name, yaml_values in settings.items():
@@ -285,7 +285,7 @@ class YamlConfig(QObject):
                       for e in sorted(unknown)]
             raise configexc.ConfigFileErrors('autoconfig.yml', errors)
 
-    def set_obj(self, name: str, value: typing.Any, *,
+    def set_obj(self, name: str, value: Any, *,
                 pattern: urlmatch.UrlPattern = None) -> None:
         """Set the given setting to the given value."""
         self._values[name].add(value, pattern)
@@ -478,7 +478,7 @@ class YamlMigrations(QObject):
                 self.changed.emit()
 
     def _migrate_to_multiple(self, old_name: str,
-                             new_names: typing.Iterable[str]) -> None:
+                             new_names: Iterable[str]) -> None:
         if old_name not in self._settings:
             return
 
@@ -541,12 +541,12 @@ class ConfigAPI:
     def __init__(self, conf: config.Config, keyconfig: config.KeyConfig):
         self._config = conf
         self._keyconfig = keyconfig
-        self.errors = []  # type: typing.List[configexc.ConfigErrorDesc]
+        self.errors = []  # type: List[configexc.ConfigErrorDesc]
         self.configdir = pathlib.Path(standarddir.config())
         self.datadir = pathlib.Path(standarddir.data())
 
     @contextlib.contextmanager
-    def _handle_error(self, action: str, name: str) -> typing.Iterator[None]:
+    def _handle_error(self, action: str, name: str) -> Iterator[None]:
         """Catch config-related exceptions and save them in self.errors."""
         try:
             yield
@@ -573,20 +573,20 @@ class ConfigAPI:
         with self._handle_error('reading', 'autoconfig.yml'):
             read_autoconfig()
 
-    def get(self, name: str, pattern: str = None) -> typing.Any:
+    def get(self, name: str, pattern: str = None) -> Any:
         """Get a setting value from the config, optionally with a pattern."""
         with self._handle_error('getting', name):
             urlpattern = urlmatch.UrlPattern(pattern) if pattern else None
             return self._config.get_mutable_obj(name, pattern=urlpattern)
 
-    def set(self, name: str, value: typing.Any, pattern: str = None) -> None:
+    def set(self, name: str, value: Any, pattern: str = None) -> None:
         """Set a setting value in the config, optionally with a pattern."""
         with self._handle_error('setting', name):
             urlpattern = urlmatch.UrlPattern(pattern) if pattern else None
             self._config.set_obj(name, value, pattern=urlpattern)
 
     def bind(self, key: str,
-             command: typing.Optional[str],
+             command: Optional[str],
              mode: str = 'normal') -> None:
         """Bind a key to a command, with an optional key mode."""
         with self._handle_error('binding', key):
@@ -616,7 +616,7 @@ class ConfigAPI:
             self.errors += e.errors
 
     @contextlib.contextmanager
-    def pattern(self, pattern: str) -> typing.Iterator[config.ConfigContainer]:
+    def pattern(self, pattern: str) -> Iterator[config.ConfigContainer]:
         """Get a ConfigContainer for the given pattern."""
         # We need to propagate the exception so we don't need to return
         # something.
@@ -632,9 +632,9 @@ class ConfigPyWriter:
 
     def __init__(
             self,
-            options: typing.List,
-            bindings: typing.MutableMapping[
-                str, typing.Mapping[str, typing.Optional[str]]],
+            options: List,
+            bindings: MutableMapping[
+                str, Mapping[str, Optional[str]]],
             *, commented: bool) -> None:
         self._options = options
         self._bindings = bindings
@@ -655,7 +655,7 @@ class ConfigPyWriter:
         else:
             return line
 
-    def _gen_lines(self) -> typing.Iterator[str]:
+    def _gen_lines(self) -> Iterator[str]:
         """Generate a config.py with the given settings/bindings.
 
         Yields individual lines.
@@ -664,7 +664,7 @@ class ConfigPyWriter:
         yield from self._gen_options()
         yield from self._gen_bindings()
 
-    def _gen_header(self) -> typing.Iterator[str]:
+    def _gen_header(self) -> Iterator[str]:
         """Generate the initial header of the config."""
         yield self._line("# Autogenerated config.py")
         yield self._line("#")
@@ -697,7 +697,7 @@ class ConfigPyWriter:
             yield self._line("# config.load_autoconfig()")
             yield ''
 
-    def _gen_options(self) -> typing.Iterator[str]:
+    def _gen_options(self) -> Iterator[str]:
         """Generate the options part of the config."""
         for pattern, opt, value in self._options:
             if opt.name in ['bindings.commands', 'bindings.default']:
@@ -725,7 +725,7 @@ class ConfigPyWriter:
                     opt.name, value, str(pattern)))
             yield ''
 
-    def _gen_bindings(self) -> typing.Iterator[str]:
+    def _gen_bindings(self) -> Iterator[str]:
         """Generate the bindings part of the config."""
         normal_bindings = self._bindings.pop('normal', {})
         if normal_bindings:
@@ -826,7 +826,7 @@ def read_autoconfig() -> None:
 
 
 @contextlib.contextmanager
-def saved_sys_properties() -> typing.Iterator[None]:
+def saved_sys_properties() -> Iterator[None]:
     """Save various sys properties such as sys.path and sys.modules."""
     old_path = sys.path.copy()
     old_modules = sys.modules.copy()

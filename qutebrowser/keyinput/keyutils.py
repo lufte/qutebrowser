@@ -32,7 +32,7 @@ handle what we actually think we do.
 """
 
 import itertools
-import typing
+from typing import Iterable, Iterator, List, Mapping, Optional, Union, cast, overload
 
 import attr
 from PyQt5.QtCore import Qt, QEvent
@@ -53,10 +53,10 @@ _MODIFIER_MAP = {
 
 _NIL_KEY = Qt.Key(0)
 
-_ModifierType = typing.Union[Qt.KeyboardModifier, Qt.KeyboardModifiers]
+_ModifierType = Union[Qt.KeyboardModifier, Qt.KeyboardModifiers]
 
 
-def _build_special_names() -> typing.Mapping[Qt.Key, str]:
+def _build_special_names() -> Mapping[Qt.Key, str]:
     """Build _SPECIAL_NAMES dict from the special_names_str mapping below.
 
     The reason we don't do this directly is that certain Qt versions don't have
@@ -232,7 +232,7 @@ def _remap_unicode(key: Qt.Key, text: str) -> Qt.Key:
 
 
 def _check_valid_utf8(s: str,
-                      data: typing.Union[Qt.Key, _ModifierType]) -> None:
+                      data: Union[Qt.Key, _ModifierType]) -> None:
     """Make sure the given string is valid UTF-8.
 
     Makes sure there are no chars where Qt did fall back to weird UTF-16
@@ -288,7 +288,7 @@ class KeyParseError(Exception):
 
     """Raised by _parse_single_key/parse_keystring on parse errors."""
 
-    def __init__(self, keystr: typing.Optional[str], error: str) -> None:
+    def __init__(self, keystr: Optional[str], error: str) -> None:
         if keystr is None:
             msg = "Could not parse keystring: {}".format(error)
         else:
@@ -296,7 +296,7 @@ class KeyParseError(Exception):
         super().__init__(msg)
 
 
-def _parse_keystring(keystr: str) -> typing.Iterator[str]:
+def _parse_keystring(keystr: str) -> Iterator[str]:
     key = ''
     special = False
     for c in keystr:
@@ -377,7 +377,7 @@ class KeyInfo:
         modifiers = e.modifiers()
         _assert_plain_key(key)
         _assert_plain_modifier(modifiers)
-        return cls(key, typing.cast(Qt.KeyboardModifier, modifiers))
+        return cls(key, cast(Qt.KeyboardModifier, modifiers))
 
     def __hash__(self) -> int:
         """Convert KeyInfo to int before hashing.
@@ -473,7 +473,7 @@ class KeySequence:
     _MAX_LEN = 4
 
     def __init__(self, *keys: int) -> None:
-        self._sequences = []  # type: typing.List[QKeySequence]
+        self._sequences = []  # type: List[QKeySequence]
         for sub in utils.chunk(keys, self._MAX_LEN):
             args = [self._convert_key(key) for key in sub]
             sequence = QKeySequence(*args)
@@ -493,7 +493,7 @@ class KeySequence:
             parts.append(str(info))
         return ''.join(parts)
 
-    def __iter__(self) -> typing.Iterator[KeyInfo]:
+    def __iter__(self) -> Iterator[KeyInfo]:
         """Iterate over KeyInfo objects."""
         for key_and_modifiers in self._iter_keys():
             key = Qt.Key(int(key_and_modifiers) & ~Qt.KeyboardModifierMask)
@@ -535,17 +535,17 @@ class KeySequence:
     def __bool__(self) -> bool:
         return bool(self._sequences)
 
-    @typing.overload
+    @overload
     def __getitem__(self, item: int) -> KeyInfo:
         ...
 
-    @typing.overload
+    @overload
     def __getitem__(self, item: slice) -> 'KeySequence':
         ...
 
     def __getitem__(
-            self, item: typing.Union[int, slice]
-    ) -> typing.Union[KeyInfo, 'KeySequence']:
+            self, item: Union[int, slice]
+    ) -> Union[KeyInfo, 'KeySequence']:
         if isinstance(item, slice):
             keys = list(self._iter_keys())
             return self.__class__(*keys[item])
@@ -553,8 +553,8 @@ class KeySequence:
             infos = list(self)
             return infos[item]
 
-    def _iter_keys(self) -> typing.Iterator[int]:
-        sequences = typing.cast(typing.Iterable[typing.Iterable[int]],
+    def _iter_keys(self) -> Iterator[int]:
+        sequences = cast(Iterable[Iterable[int]],
                                 self._sequences)
         return itertools.chain.from_iterable(sequences)
 
@@ -664,7 +664,7 @@ class KeySequence:
 
     def with_mappings(
             self,
-            mappings: typing.Mapping['KeySequence', 'KeySequence']
+            mappings: Mapping['KeySequence', 'KeySequence']
     ) -> 'KeySequence':
         """Get a new KeySequence with the given mappings applied."""
         keys = []

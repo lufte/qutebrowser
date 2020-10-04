@@ -22,7 +22,7 @@
 import os
 import time
 import contextlib
-import typing
+from typing import Mapping, MutableSequence, cast
 
 from PyQt5.QtCore import pyqtSlot, QUrl, pyqtSignal
 from PyQt5.QtWidgets import QProgressDialog, QApplication
@@ -35,7 +35,7 @@ from qutebrowser.misc import objects, sql
 
 # increment to indicate that HistoryCompletion must be regenerated
 _USER_VERSION = 2
-web_history = typing.cast('WebHistory', None)
+web_history = cast('WebHistory', None)
 
 
 class HistoryProgress:
@@ -212,7 +212,7 @@ class WebHistory(sql.SqlTable):
             'url': [],
             'title': [],
             'last_atime': []
-        }  # type: typing.Mapping[str, typing.MutableSequence[str]]
+        }  # type: Mapping[str, MutableSequence[str]]
         # select the latest entry for each url
         q = sql.Query('SELECT url, title, max(atime) AS atime FROM History '
                       'WHERE NOT redirect and url NOT LIKE "qute://back%" '

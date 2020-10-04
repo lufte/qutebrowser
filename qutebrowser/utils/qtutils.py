@@ -31,7 +31,7 @@ Module attributes:
 import io
 import operator
 import contextlib
-import typing
+from typing import BinaryIO, IO, Iterator, Optional, Protocol, TYPE_CHECKING, Union, cast
 
 import pkg_resources
 from PyQt5.QtCore import (qVersion, QEventLoop, QDataStream, QByteArray,
@@ -71,7 +71,7 @@ class QtOSError(OSError):
         if msg is None:
             msg = dev.errorString()
 
-        self.qt_errno = None  # type: typing.Optional[QFileDevice.FileError]
+        self.qt_errno = None  # type: Optional[QFileDevice.FileError]
         if isinstance(dev, QFileDevice):
             msg = self._init_filedev(dev, msg)
 
@@ -155,8 +155,8 @@ def check_overflow(arg: int, ctype: str, fatal: bool = True) -> int:
         return arg
 
 
-if typing.TYPE_CHECKING:
-    class Validatable(typing.Protocol):
+if TYPE_CHECKING:
+    class Validatable(Protocol):
 
         """An object with an isValid() method (e.g. QUrl)."""
 
@@ -184,7 +184,7 @@ def check_qdatastream(stream: QDataStream) -> None:
         raise OSError(status_to_str[stream.status()])
 
 
-_QtSerializableType = typing.Union[QObject, QByteArray, QUrl]
+_QtSerializableType = Union[QObject, QByteArray, QUrl]
 
 
 def serialize(obj: _QtSerializableType) -> QByteArray:
@@ -222,7 +222,7 @@ def savefile_open(
         filename: str,
         binary: bool = False,
         encoding: str = 'utf-8'
-) -> typing.Iterator[typing.IO]:
+) -> Iterator[IO]:
     """Context manager to easily use a QSaveFile."""
     f = QSaveFile(filename)
     cancelled = False
@@ -231,10 +231,10 @@ def savefile_open(
         if not open_ok:
             raise QtOSError(f)
 
-        dev = typing.cast(typing.BinaryIO, PyQIODevice(f))
+        dev = cast(BinaryIO, PyQIODevice(f))
 
         if binary:
-            new_f = dev  # type: typing.IO
+            new_f = dev  # type: IO
         else:
             new_f = io.TextIOWrapper(dev, encoding=encoding)
 
@@ -363,7 +363,7 @@ class PyQIODevice(io.BufferedIOBase):
         else:
             qt_size = size + 1  # Qt also counts the NUL byte
 
-        buf = None  # type: typing.Union[QByteArray, bytes, None]
+        buf = None  # type: Union[QByteArray, bytes, None]
         if self.dev.canReadLine():
             buf = self.dev.readLine(qt_size)
         elif size < 0:
@@ -392,7 +392,7 @@ class PyQIODevice(io.BufferedIOBase):
     def writable(self) -> bool:
         return self.dev.isWritable()
 
-    def write(self, data: typing.Union[bytes, bytearray]) -> int:
+    def write(self, data: Union[bytes, bytearray]) -> int:
         self._check_open()
         self._check_writable()
         num = self.dev.write(data)
@@ -400,11 +400,11 @@ class PyQIODevice(io.BufferedIOBase):
             raise QtOSError(self.dev)
         return num
 
-    def read(self, size: typing.Optional[int] = None) -> bytes:
+    def read(self, size: Optional[int] = None) -> bytes:
         self._check_open()
         self._check_readable()
 
-        buf = None  # type: typing.Union[QByteArray, bytes, None]
+        buf = None  # type: Union[QByteArray, bytes, None]
         if size in [None, -1]:
             buf = self.dev.readAll()
         else:
@@ -451,7 +451,7 @@ class EventLoop(QEventLoop):
     def exec_(
             self,
             flags: QEventLoop.ProcessEventsFlags =
-            typing.cast(QEventLoop.ProcessEventsFlags, QEventLoop.AllEvents)
+            cast(QEventLoop.ProcessEventsFlags, QEventLoop.AllEvents)
     ) -> int:
         """Override exec_ to raise an exception when re-running."""
         if self._executing:

@@ -19,7 +19,7 @@
 
 """Commands related to the configuration."""
 
-import typing
+from typing import Iterator, List, Optional, TYPE_CHECKING
 import os.path
 import contextlib
 
@@ -32,7 +32,7 @@ from qutebrowser.config import configtypes, configexc, configfiles, configdata
 from qutebrowser.misc import editor
 from qutebrowser.keyinput import keyutils
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from qutebrowser.config.config import Config, KeyConfig
 
 
@@ -47,7 +47,7 @@ class ConfigCommands:
         self._keyconfig = keyconfig
 
     @contextlib.contextmanager
-    def _handle_config_error(self) -> typing.Iterator[None]:
+    def _handle_config_error(self) -> Iterator[None]:
         """Catch errors in set_command and raise CommandError."""
         try:
             yield
@@ -56,8 +56,8 @@ class ConfigCommands:
 
     def _parse_pattern(
             self,
-            pattern: typing.Optional[str]
-    ) -> typing.Optional[urlmatch.UrlPattern]:
+            pattern: Optional[str]
+    ) -> Optional[urlmatch.UrlPattern]:
         """Parse a pattern string argument to a pattern."""
         if pattern is None:
             return None
@@ -76,7 +76,7 @@ class ConfigCommands:
             raise cmdutils.CommandError(str(e))
 
     def _print_value(self, option: str,
-                     pattern: typing.Optional[urlmatch.UrlPattern]) -> None:
+                     pattern: Optional[urlmatch.UrlPattern]) -> None:
         """Print the value of the given option."""
         with self._handle_config_error():
             value = self._config.get_str(option, pattern=pattern)
@@ -468,7 +468,7 @@ class ConfigCommands:
             raise cmdutils.CommandError("{} already exists - use --force to "
                                         "overwrite!".format(filename))
 
-        options = []  # type: typing.List
+        options = []  # type: List
         if defaults:
             options = [(None, opt, opt.default)
                        for _name, opt in sorted(configdata.DATA.items())]

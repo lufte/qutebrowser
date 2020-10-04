@@ -33,7 +33,7 @@ import email.encoders
 import email.mime.multipart
 import email.message
 import quopri
-import typing
+from typing import MutableMapping, Set, Tuple
 
 import attr
 from PyQt5.QtCore import QUrl
@@ -189,7 +189,7 @@ class MHTMLWriter:
         self.root_content = root_content
         self.content_location = content_location
         self.content_type = content_type
-        self._files = {}  # type: typing.MutableMapping[QUrl, _File]
+        self._files = {}  # type: MutableMapping[QUrl, _File]
 
     def add_file(self, location, content, content_type=None,
                  transfer_encoding=E_QUOPRI):
@@ -244,8 +244,8 @@ class MHTMLWriter:
         return msg
 
 
-_PendingDownloadType = typing.Set[
-    typing.Tuple[QUrl, downloads.AbstractDownloadItem]]
+_PendingDownloadType = Set[
+    Tuple[QUrl, downloads.AbstractDownloadItem]]
 
 
 class _Downloader:

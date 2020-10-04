@@ -21,7 +21,7 @@
 
 import string
 import types
-import typing
+from typing import Mapping, MutableMapping, Optional, Sequence
 
 import attr
 from PyQt5.QtCore import pyqtSignal, QObject, Qt
@@ -38,7 +38,7 @@ class MatchResult:
     """The result of matching a keybinding."""
 
     match_type = attr.ib()  # type: QKeySequence.SequenceMatch
-    command = attr.ib()  # type: typing.Optional[str]
+    command = attr.ib()  # type: Optional[str]
     sequence = attr.ib()  # type: keyutils.KeySequence
 
     def __attrs_post_init__(self) -> None:
@@ -76,8 +76,8 @@ class BindingTrie:
 
     def __init__(self) -> None:
         self.children = {
-        }  # type: typing.MutableMapping[keyutils.KeyInfo, BindingTrie]
-        self.command = None  # type: typing.Optional[str]
+        }  # type: MutableMapping[keyutils.KeyInfo, BindingTrie]
+        self.command = None  # type: Optional[str]
 
     def __setitem__(self, sequence: keyutils.KeySequence,
                     command: str) -> None:
@@ -100,7 +100,7 @@ class BindingTrie:
         return '\n'.join(self.string_lines(blank=True))
 
     def string_lines(self, indent: int = 0,
-                     blank: bool = False) -> typing.Sequence[str]:
+                     blank: bool = False) -> Sequence[str]:
         """Get a list of strings for a pretty-printed version of this trie."""
         lines = []
         if self.command is not None:
@@ -114,7 +114,7 @@ class BindingTrie:
 
         return lines
 
-    def update(self, mapping: typing.Mapping) -> None:
+    def update(self, mapping: Mapping) -> None:
         """Add data from the given mapping to the trie."""
         for key in mapping:
             self[key] = mapping[key]
