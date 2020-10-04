@@ -51,7 +51,9 @@ import warnings
 import functools
 import operator
 import json
-from typing import Any, Callable, Dict, Iterable, Iterator, List, Optional, Pattern, Sequence, Tuple, Union
+import typing
+from typing import (Any, Callable, Iterable, Iterator, Optional, Pattern, Sequence,
+                    Tuple, Union)
 
 import attr
 import yaml
@@ -96,15 +98,12 @@ class ValidValues:
         generate_docs: Whether to show the values in the docs.
     """
 
-    def __init__(self,
-                 *values: Union[str,
-                                       Dict[str, str],
-                                       Tuple[str, str]],
+    def __init__(self, *values: Union[str, typing.Dict[str, str], Tuple[str, str]],
                  generate_docs: bool = True) -> None:
         if not values:
             raise ValueError("ValidValues with no values makes no sense!")
-        self.descriptions = {}  # type: Dict[str, str]
-        self.values = []  # type: List[str]
+        self.descriptions = {}  # type: typing.Dict[str, str]
+        self.values = []  # type: typing.List[str]
         self.generate_docs = generate_docs
         for value in values:
             if isinstance(value, str):
@@ -335,7 +334,7 @@ class MappingType(BaseType):
         MAPPING: The mapping to use.
     """
 
-    MAPPING = {}  # type: Dict[str, Any]
+    MAPPING = {}  # type: typing.Dict[str, Any]
 
     def __init__(self, none_ok: bool = False,
                  valid_values: ValidValues = None) -> None:
@@ -495,7 +494,7 @@ class List(BaseType):
     def get_valid_values(self) -> Optional[ValidValues]:
         return self.valtype.get_valid_values()
 
-    def from_str(self, value: str) -> Optional[List]:
+    def from_str(self, value: str) -> Optional[typing.List]:
         self._basic_str_validation(value)
         if not value:
             return None
@@ -510,15 +509,15 @@ class List(BaseType):
         self.to_py(yaml_val)
         return yaml_val
 
-    def from_obj(self, value: Optional[List]) -> List:
+    def from_obj(self, value: Optional[typing.List]) -> typing.List:
         if value is None:
             return []
         return [self.valtype.from_obj(v) for v in value]
 
     def to_py(
             self,
-            value: Union[List, usertypes.Unset]
-    ) -> Union[List, usertypes.Unset]:
+            value: Union[typing.List, usertypes.Unset]
+    ) -> Union[typing.List, usertypes.Unset]:
         self._basic_py_validation(value, list)
         if isinstance(value, usertypes.Unset):
             return value
@@ -533,13 +532,13 @@ class List(BaseType):
                                             "be set!".format(self.length))
         return [self.valtype.to_py(v) for v in value]
 
-    def to_str(self, value: List) -> str:
+    def to_str(self, value: typing.List) -> str:
         if not value:
             # An empty list is treated just like None -> empty string
             return ''
         return json.dumps(value)
 
-    def to_doc(self, value: List, indent: int = 0) -> str:
+    def to_doc(self, value: typing.List, indent: int = 0) -> str:
         if not value:
             return 'empty'
 
@@ -652,15 +651,15 @@ class FlagList(List):
         super().__init__(valtype=String(), none_ok=none_ok, length=length)
         self.valtype.valid_values = valid_values
 
-    def _check_duplicates(self, values: List) -> None:
+    def _check_duplicates(self, values: typing.List) -> None:
         if len(set(values)) != len(values):
             raise configexc.ValidationError(
                 values, "List contains duplicate values!")
 
     def to_py(
             self,
-            value: Union[usertypes.Unset, List],
-    ) -> Union[usertypes.Unset, List]:
+            value: Union[usertypes.Unset, typing.List],
+    ) -> Union[usertypes.Unset, typing.List]:
         vals = super().to_py(value)
         if not isinstance(vals, usertypes.Unset):
             self._check_duplicates(vals)
@@ -1094,7 +1093,7 @@ class QtColor(BaseType):
                 'rgb': QColor.fromRgb,
                 'hsva': QColor.fromHsv,
                 'hsv': QColor.fromHsv,
-            }  # type: Dict[str, Callable[..., QColor]]
+            }  # type: typing.Dict[str, Callable[..., QColor]]
 
             conv = converters.get(kind)
             if not conv:
@@ -1179,7 +1178,7 @@ class FontBase(BaseType):
         (?P<family>.+)  # mandatory font family""", re.VERBOSE)
 
     @classmethod
-    def set_defaults(cls, default_family: List[str],
+    def set_defaults(cls, default_family: typing.List[str],
                      default_size: str) -> None:
         """Make sure default_family/default_size are available.
 
@@ -1396,7 +1395,7 @@ class Dict(BaseType):
         self.fixed_keys = fixed_keys
         self.required_keys = required_keys
 
-    def _validate_keys(self, value: Dict) -> None:
+    def _validate_keys(self, value: typing.Dict) -> None:
         if (self.fixed_keys is not None and not
                 set(value.keys()).issubset(self.fixed_keys)):
             raise configexc.ValidationError(
@@ -1407,7 +1406,7 @@ class Dict(BaseType):
             raise configexc.ValidationError(
                 value, "Required keys {}".format(self.required_keys))
 
-    def from_str(self, value: str) -> Optional[Dict]:
+    def from_str(self, value: str) -> Optional[typing.Dict]:
         self._basic_str_validation(value)
         if not value:
             return None
@@ -1422,14 +1421,14 @@ class Dict(BaseType):
         self.to_py(yaml_val)
         return yaml_val
 
-    def from_obj(self, value: Optional[Dict]) -> Dict:
+    def from_obj(self, value: Optional[typing.Dict]) -> typing.Dict:
         if value is None:
             return {}
 
         return {self.keytype.from_obj(key): self.valtype.from_obj(val)
                 for key, val in value.items()}
 
-    def _fill_fixed_keys(self, value: Dict) -> Dict:
+    def _fill_fixed_keys(self, value: typing.Dict) -> typing.Dict:
         """Fill missing fixed keys with a None-value."""
         if self.fixed_keys is None:
             return value
@@ -1440,8 +1439,8 @@ class Dict(BaseType):
 
     def to_py(
             self,
-            value: Union[Dict, _UnsetNone]
-    ) -> Union[Dict, usertypes.Unset]:
+            value: Union[typing.Dict, _UnsetNone]
+    ) -> Union[typing.Dict, usertypes.Unset]:
         self._basic_py_validation(value, dict)
         if isinstance(value, usertypes.Unset):
             return value
@@ -1457,13 +1456,13 @@ class Dict(BaseType):
              for key, val in value.items()}
         return self._fill_fixed_keys(d)
 
-    def to_str(self, value: Dict) -> str:
+    def to_str(self, value: typing.Dict) -> str:
         if not value:
             # An empty Dict is treated just like None -> empty string
             return ''
         return json.dumps(value, sort_keys=True)
 
-    def to_doc(self, value: Dict, indent: int = 0) -> str:
+    def to_doc(self, value: typing.Dict, indent: int = 0) -> str:
         if not value:
             return 'empty'
         lines = ['\n']
@@ -1605,8 +1604,8 @@ class ShellCommand(List):
 
     def to_py(
             self,
-            value: Union[List, usertypes.Unset],
-    ) -> Union[List, usertypes.Unset]:
+            value: Union[typing.List, usertypes.Unset],
+    ) -> Union[typing.List, usertypes.Unset]:
         py_value = super().to_py(value)
         if isinstance(py_value, usertypes.Unset):
             return py_value
@@ -1747,7 +1746,7 @@ class Padding(Dict):
 
     def to_py(  # type: ignore[override]
             self,
-            value: Union[Dict, _UnsetNone],
+            value: Union[typing.Dict, _UnsetNone],
     ) -> Union[usertypes.Unset, PaddingValues]:
         d = super().to_py(value)
         if isinstance(d, usertypes.Unset):
@@ -1889,8 +1888,8 @@ class ConfirmQuit(FlagList):
 
     def to_py(
             self,
-            value: Union[usertypes.Unset, List],
-    ) -> Union[List, usertypes.Unset]:
+            value: Union[usertypes.Unset, typing.List],
+    ) -> Union[typing.List, usertypes.Unset]:
         values = super().to_py(value)
         if isinstance(values, usertypes.Unset):
             return values

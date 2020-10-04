@@ -22,7 +22,8 @@
 import enum
 import itertools
 import functools
-from typing import Any, Callable, Iterable, List, Optional, Sequence, Set, TYPE_CHECKING, Type, Union, cast
+from typing import (Any, Callable, Iterable, List, Optional, Sequence, Set,
+                    TYPE_CHECKING, Type, Union, cast)
 
 import attr
 from PyQt5.QtCore import (pyqtSignal, pyqtSlot, QUrl, QObject, QSizeF, Qt,

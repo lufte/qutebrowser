@@ -32,8 +32,7 @@ import textwrap
 import urllib
 import collections
 import base64
-from typing import Callable, Dict, List, Optional, Sequence, Tuple, Union
-from typing import TypeVar, Callable, Union, Tuple
+from typing import Callable, Dict, List, Optional, Sequence, Tuple, TypeVar, Union
 
 try:
     import secrets

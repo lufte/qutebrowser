@@ -22,7 +22,8 @@
 import collections
 import functools
 import weakref
-from typing import Any, Deque, List, Mapping, MutableMapping, MutableSequence, Optional, Tuple
+from typing import (Any, Deque, List, Mapping, MutableMapping, MutableSequence,
+                    Optional, Tuple)
 import datetime
 
 import attr

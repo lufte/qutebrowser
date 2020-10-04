@@ -31,7 +31,8 @@ import traceback
 import warnings
 import json
 import inspect
-from typing import Any, Iterator, Mapping, MutableSequence, Optional, Set, TYPE_CHECKING, Tuple, Union, cast
+from typing import (Any, Iterator, Mapping, MutableSequence, Optional, Set,
+                    TYPE_CHECKING, Tuple, Union, cast)
 import argparse
 
 from PyQt5 import QtCore
@@ -312,7 +313,7 @@ def _init_formatters(
         force_color: bool,
         json_logging: bool
 ) -> Tuple[Union['JSONFormatter', 'ColoredFormatter'],
-                  'ColoredFormatter', 'HTMLFormatter', bool]:
+           'ColoredFormatter', 'HTMLFormatter', bool]:
     """Init log formatters.
 
     Args:

@@ -20,7 +20,8 @@
 """A HintManager to draw hints over links."""
 
 import collections
-from typing import Callable, Dict, Iterable, Iterator, List, Mapping, MutableSequence, Optional, Sequence, Set, TYPE_CHECKING
+from typing import (Callable, Dict, Iterable, Iterator, List, Mapping, MutableSequence,
+                    Optional, Sequence, Set, TYPE_CHECKING)
 import functools
 import os
 import re

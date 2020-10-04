@@ -19,7 +19,8 @@
 
 """QtWebEngine specific part of the web element API."""
 
-from typing import Any, Callable, Dict, Iterator, Optional, Set, TYPE_CHECKING, Tuple, Union
+from typing import (Any, Callable, Dict, Iterator, Optional, Set, TYPE_CHECKING, Tuple,
+                    Union)
 
 from PyQt5.QtCore import QRect, Qt, QPoint, QEventLoop
 from PyQt5.QtGui import QMouseEvent

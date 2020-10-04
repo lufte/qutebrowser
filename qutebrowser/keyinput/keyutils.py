@@ -554,8 +554,7 @@ class KeySequence:
             return infos[item]
 
     def _iter_keys(self) -> Iterator[int]:
-        sequences = cast(Iterable[Iterable[int]],
-                                self._sequences)
+        sequences = cast(Iterable[Iterable[int]], self._sequences)
         return itertools.chain.from_iterable(sequences)
 
     def _validate(self, keystr: str = None) -> None:

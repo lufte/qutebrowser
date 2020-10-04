@@ -72,8 +72,7 @@ class InvalidUrlError(Error):
         super().__init__(self.msg)
 
 
-def _parse_search_term(s: str) -> Tuple[Optional[str],
-                                               Optional[str]]:
+def _parse_search_term(s: str) -> Tuple[Optional[str], Optional[str]]:
     """Get a search engine name and search term from a string.
 
     Args:

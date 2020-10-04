@@ -177,8 +177,7 @@ class WebKitElement(webelem.AbstractWebElement):
     def _parent(self) -> Optional['WebKitElement']:
         """Get the parent element of this element."""
         self._check_vanished()
-        elem = cast(Optional[QWebElement],
-                           self._elem.parent())
+        elem = cast(Optional[QWebElement], self._elem.parent())
         if elem is None or elem.isNull():
             return None
 

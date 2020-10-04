@@ -24,8 +24,8 @@ Module attributes:
 DATA: A dict of Option objects after init() has been called.
 """
 
-from typing import Any, Dict, Iterable, List, Mapping, MutableMapping, Sequence, Tuple, Union, cast
-from typing import Optional
+from typing import (Any, Dict, Iterable, List, Mapping, MutableMapping, Optional,
+                    Sequence, Tuple, Union, cast)
 import functools
 
 import attr

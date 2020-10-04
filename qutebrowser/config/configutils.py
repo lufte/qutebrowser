@@ -21,7 +21,8 @@
 """Utilities and data structures used by various config code."""
 
 
-from typing import Any, Dict, Iterable, Iterator, List, Optional, Sequence, Set, TYPE_CHECKING, Union
+from typing import (Any, Dict, Iterable, Iterator, List, Optional, Sequence, Set,
+                    TYPE_CHECKING, Union)
 import collections
 import itertools
 import operator

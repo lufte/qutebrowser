@@ -24,7 +24,8 @@ import inspect
 import logging
 import functools
 import datetime
-from typing import Any, Callable, List, Mapping, MutableSequence, Optional, Sequence, Type, Union
+from typing import (Any, Callable, List, Mapping, MutableSequence, Optional, Sequence,
+                    Type, Union)
 import types
 
 from PyQt5.QtCore import Qt, QEvent, QMetaMethod, QObject, pyqtSignal

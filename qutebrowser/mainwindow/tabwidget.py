@@ -355,8 +355,7 @@ class TabWidget(QTabWidget):
 
     def setTabIcon(self, idx: int, icon: QIcon) -> None:
         """Always show tab icons for pinned tabs in some circumstances."""
-        tab = cast(Optional[browsertab.AbstractTab],
-                          self.widget(idx))
+        tab = cast(Optional[browsertab.AbstractTab], self.widget(idx))
         if (icon.isNull() and
                 config.cache['tabs.favicons.show'] != 'never' and
                 config.cache['tabs.pinned.shrink'] and

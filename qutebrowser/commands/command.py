@@ -22,7 +22,8 @@
 import inspect
 import collections
 import traceback
-from typing import Any, MutableMapping, MutableSequence, Tuple, Union, UnionMeta
+import typing
+from typing import Any, MutableMapping, MutableSequence, Tuple, Union
 
 import attr
 
@@ -410,7 +411,7 @@ class Command:
             # Python 3.5.2
             # pylint: disable=no-member,useless-suppression
             is_union = isinstance(
-                typ, UnionMeta)  # type: ignore[attr-defined]
+                typ, typing.UnionMeta)  # type: ignore[attr-defined]
         else:
             is_union = getattr(typ, '__origin__', None) is Union
 

@@ -22,7 +22,8 @@
 
 import collections
 import functools
-from typing import Any, Callable, MutableMapping, MutableSequence, Optional, Sequence, TYPE_CHECKING, Union
+from typing import (Any, Callable, MutableMapping, MutableSequence, Optional, Sequence,
+                    TYPE_CHECKING, Union)
 
 from PyQt5.QtCore import QObject, QTimer
 from PyQt5.QtWidgets import QApplication

@@ -123,8 +123,7 @@ def init():
         QSslSocket.setDefaultCiphers(good_ciphers)
 
 
-_SavedErrorsType = MutableMapping[urlutils.HostTupleType,
-                                         Sequence[QSslError]]
+_SavedErrorsType = MutableMapping[urlutils.HostTupleType, Sequence[QSslError]]
 
 
 class NetworkManager(QNetworkAccessManager):

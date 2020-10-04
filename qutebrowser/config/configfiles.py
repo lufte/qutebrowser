@@ -27,7 +27,8 @@ import textwrap
 import traceback
 import configparser
 import contextlib
-from typing import Any, Dict, Iterable, Iterator, List, Mapping, MutableMapping, Optional, TYPE_CHECKING, cast
+from typing import (Any, Dict, Iterable, Iterator, List, Mapping, MutableMapping,
+                    Optional, TYPE_CHECKING, cast)
 import re
 
 import yaml

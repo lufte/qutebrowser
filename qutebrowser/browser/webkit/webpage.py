@@ -354,10 +354,10 @@ class BrowserPage(QWebPage):
             QWebPage.PermissionDeniedByUser)
 
         url = frame.url().adjusted(cast(QUrl.FormattingOptions,
-                                               QUrl.RemoveUserInfo |
-                                               QUrl.RemovePath |
-                                               QUrl.RemoveQuery |
-                                               QUrl.RemoveFragment))
+                                        QUrl.RemoveUserInfo |
+                                        QUrl.RemovePath |
+                                        QUrl.RemoveQuery |
+                                        QUrl.RemoveFragment))
         question = shared.feature_permission(
             url=url,
             option=options[feature], msg=messages[feature],

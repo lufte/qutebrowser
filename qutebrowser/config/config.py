@@ -22,8 +22,8 @@
 import copy
 import contextlib
 import functools
-from typing import Any, Callable, Dict, Iterator, List, Mapping, MutableSequence, Optional, TYPE_CHECKING, cast
-from typing import Any
+from typing import (Any, Callable, Dict, Iterator, List, Mapping, MutableSequence,
+                    Optional, TYPE_CHECKING, cast)
 
 from PyQt5.QtCore import pyqtSignal, QObject, QUrl
 

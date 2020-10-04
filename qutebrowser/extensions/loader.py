@@ -61,8 +61,7 @@ class ModuleInfo:
     This gets used by qutebrowser.api.hook.
     """
 
-    _ConfigChangedHooksType = List[Tuple[Optional[str],
-                                                       Callable]]
+    _ConfigChangedHooksType = List[Tuple[Optional[str], Callable]]
 
     skip_hooks = attr.ib(False)  # type: bool
     init_hook = attr.ib(None)  # type: Optional[Callable]

@@ -31,7 +31,8 @@ Module attributes:
 import io
 import operator
 import contextlib
-from typing import BinaryIO, IO, Iterator, Optional, Protocol, TYPE_CHECKING, Union, cast
+from typing import (BinaryIO, IO, Iterator, Optional, Protocol, TYPE_CHECKING, Union,
+                    cast)
 
 import pkg_resources
 from PyQt5.QtCore import (qVersion, QEventLoop, QDataStream, QByteArray,
