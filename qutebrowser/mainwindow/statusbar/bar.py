@@ -31,8 +31,7 @@ from qutebrowser.keyinput import modeman
 from qutebrowser.utils import usertypes, log, objreg, utils
 from qutebrowser.mainwindow.statusbar import (backforward, command, progress,
                                               keystring, percentage, url,
-                                              tabindex)
-from qutebrowser.mainwindow.statusbar import text as textwidget
+                                              tabindex, textbase)
 
 
 @attr.s
@@ -49,7 +48,14 @@ class ColorFlags:
         passthrough: If we're currently in passthrough-mode.
     """
 
-    CaretMode = enum.Enum('CaretMode', ['off', 'on', 'selection'])
+    class CaretMode(enum.Enum):
+
+        """The current caret "sub-mode" we're in."""
+
+        off = enum.auto()
+        on = enum.auto()
+        selection = enum.auto()
+
     prompt = attr.ib(False)
     insert = attr.ib(False)
     command = attr.ib(False)
@@ -180,7 +186,7 @@ class StatusBar(QWidget):
         objreg.register('status-command', self.cmd, scope='window',
                         window=win_id)
 
-        self.txt = textwidget.Text()
+        self.txt = textbase.TextBase()
         self._stack.addWidget(self.txt)
 
         self.cmd.show_cmd.connect(self._show_cmd_widget)
@@ -203,7 +209,7 @@ class StatusBar(QWidget):
 
     @pyqtSlot(str)
     def _on_config_changed(self, option):
-        if option == 'statusbar.hide':
+        if option == 'statusbar.show':
             self.maybe_hide()
         elif option == 'statusbar.padding':
             self._set_hbox_padding()
@@ -254,12 +260,26 @@ class StatusBar(QWidget):
     @pyqtSlot()
     def maybe_hide(self):
         """Hide the statusbar if it's configured to do so."""
+        strategy = config.val.statusbar.show
         tab = self._current_tab()
-        hide = config.val.statusbar.hide
-        if hide or (tab is not None and tab.data.fullscreen):
+        if tab is not None and tab.data.fullscreen:
             self.hide()
-        else:
+        elif strategy == 'never':
+            self.hide()
+        elif strategy == 'in-mode':
+            try:
+                mode_manager = modeman.instance(self._win_id)
+            except modeman.UnavailableError:
+                self.hide()
+            else:
+                if mode_manager.mode == usertypes.KeyMode.normal:
+                    self.hide()
+                else:
+                    self.show()
+        elif strategy == 'always':
             self.show()
+        else:
+            raise utils.Unreachable
 
     def _set_hbox_padding(self):
         padding = config.val.statusbar.padding
@@ -314,7 +334,7 @@ class StatusBar(QWidget):
         else:
             suffix = ''
         text = "-- {} MODE --{}".format(mode.upper(), suffix)
-        self.txt.set_text(self.txt.Text.normal, text)
+        self.txt.setText(text)
 
     def _show_cmd_widget(self):
         """Show command widget instead of temporary text."""
@@ -328,14 +348,17 @@ class StatusBar(QWidget):
         self.maybe_hide()
 
     @pyqtSlot(str)
-    def set_text(self, val):
+    def set_text(self, text):
         """Set a normal (persistent) text in the status bar."""
-        self.txt.set_text(self.txt.Text.normal, val)
+        log.message.debug(text)
+        self.txt.setText(text)
 
     @pyqtSlot(usertypes.KeyMode)
     def on_mode_entered(self, mode):
         """Mark certain modes in the commandline."""
         mode_manager = modeman.instance(self._win_id)
+        if config.val.statusbar.show == 'in-mode':
+            self.show()
         if mode_manager.parsers[mode].passthrough:
             self._set_mode_text(mode.name)
         if mode in [usertypes.KeyMode.insert,
@@ -350,11 +373,13 @@ class StatusBar(QWidget):
     def on_mode_left(self, old_mode, new_mode):
         """Clear marked mode."""
         mode_manager = modeman.instance(self._win_id)
+        if config.val.statusbar.show == 'in-mode':
+            self.hide()
         if mode_manager.parsers[old_mode].passthrough:
             if mode_manager.parsers[new_mode].passthrough:
                 self._set_mode_text(new_mode.name)
             else:
-                self.txt.set_text(self.txt.Text.normal, '')
+                self.txt.setText('')
         if old_mode in [usertypes.KeyMode.insert,
                         usertypes.KeyMode.command,
                         usertypes.KeyMode.caret,

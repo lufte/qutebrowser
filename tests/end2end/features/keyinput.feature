@@ -18,31 +18,6 @@ Feature: Keyboard input
 
     # input.forward_unbound_keys
 
-    @qt<5.11.1
-    Scenario: Forwarding all keys
-        When I open data/keyinput/log.html
-        And I set input.forward_unbound_keys to all
-        And I press the key ","
-        And I press the key "<F1>"
-        # ,
-        Then the javascript message "key press: 188" should be logged
-        And the javascript message "key release: 188" should be logged
-        # <F1>
-        And the javascript message "key press: 112" should be logged
-        And the javascript message "key release: 112" should be logged
-
-    @qt<5.11.1
-    Scenario: Forwarding special keys
-        When I open data/keyinput/log.html
-        And I set input.forward_unbound_keys to auto
-        And I press the keys ",<F1>"
-        # <F1>
-        Then the javascript message "key press: 112" should be logged
-        And the javascript message "key release: 112" should be logged
-        # ,
-        And the javascript message "key press: 188" should not be logged
-        And the javascript message "key release: 188" should not be logged
-
     Scenario: Forwarding no keys
         When I open data/keyinput/log.html
         And I set input.forward_unbound_keys to none
@@ -66,10 +41,10 @@ Feature: Keyboard input
     @no_xvfb @posix @qtwebengine_skip
     Scenario: :fake-key sending key to the website with other window focused
         When I open data/keyinput/log.html
-        And I run :inspector
+        And I run :devtools
         And I wait for "Focus object changed: <PyQt5.QtWebKitWidgets.QWebView object at *>" in the log
         And I run :fake-key x
-        And I run :inspector
+        And I run :devtools
         And I wait for "Focus object changed: <qutebrowser.browser.webkit.webview.WebView *>" in the log
         Then the error "No focused webview!" should be shown
 
@@ -170,10 +145,10 @@ Feature: Keyboard input
         And I clean up open tabs
         When I open data/hello.txt
         And I run :enter-mode insert
+        And I wait for "Entering mode KeyMode.insert (reason: command)" in the log
         And I open data/hello2.txt in a new background tab
         And I run :tab-focus 2
-        Then "Entering mode KeyMode.insert (reason: command)" should be logged
-        And "Leaving mode KeyMode.insert (reason: tab changed)" should be logged
+        Then "Leaving mode KeyMode.insert (reason: tab changed)" should be logged
         And "Mode before tab change: insert (mode_on_change = normal)" should be logged
         And "Mode after tab change: normal (mode_on_change = normal)" should be logged
 
@@ -182,10 +157,10 @@ Feature: Keyboard input
         And I clean up open tabs
         When I open data/hello.txt
         And I run :enter-mode insert
+        And I wait for "Entering mode KeyMode.insert (reason: command)" in the log
         And I open data/hello2.txt in a new background tab
         And I run :tab-focus 2
-        Then "Entering mode KeyMode.insert (reason: command)" should be logged
-        And "Leaving mode KeyMode.insert (reason: tab changed)" should not be logged
+        Then "Leaving mode KeyMode.insert (reason: tab changed)" should not be logged
         And "Mode before tab change: insert (mode_on_change = persist)" should be logged
         And "Mode after tab change: insert (mode_on_change = persist)" should be logged
 
@@ -194,14 +169,14 @@ Feature: Keyboard input
         And I clean up open tabs
         When I open data/hello.txt
         And I run :enter-mode insert
+        And I wait for "Entering mode KeyMode.insert (reason: command)" in the log
         And I open data/hello2.txt in a new background tab
         And I run :tab-focus 2
+        And I wait for "Mode before tab change: insert (mode_on_change = restore)" in the log
+        And I wait for "Mode after tab change: normal (mode_on_change = restore)" in the log
         And I run :enter-mode passthrough
+        And I wait for "Entering mode KeyMode.passthrough (reason: command)" in the log
         And I run :tab-focus 1
-        Then "Entering mode KeyMode.insert (reason: command)" should be logged
-        And "Mode before tab change: insert (mode_on_change = restore)" should be logged
-        And "Mode after tab change: normal (mode_on_change = restore)" should be logged
-        And "Entering mode KeyMode.passthrough (reason: command)" should be logged
-        And "Mode before tab change: passthrough (mode_on_change = restore)" should be logged
+        Then "Mode before tab change: passthrough (mode_on_change = restore)" should be logged
         And "Entering mode KeyMode.insert (reason: restore)" should be logged
         And "Mode after tab change: insert (mode_on_change = restore)" should be logged

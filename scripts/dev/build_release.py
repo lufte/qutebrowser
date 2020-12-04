@@ -78,10 +78,11 @@ def call_tox(toxenv, *args, python=sys.executable):
 def run_asciidoc2html(args):
     """Common buildsteps used for all OS'."""
     utils.print_title("Running asciidoc2html.py")
+    a2h_args = []
     if args.asciidoc is not None:
-        a2h_args = ['--asciidoc'] + args.asciidoc
-    else:
-        a2h_args = []
+        a2h_args += ['--asciidoc', args.asciidoc]
+    if args.asciidoc_python is not None:
+        a2h_args += ['--asciidoc-python', args.asciidoc_python]
     call_script('asciidoc2html.py', *a2h_args)
 
 
@@ -201,7 +202,7 @@ def build_mac():
     utils.print_title("Updating 3rdparty content")
     update_3rdparty.run(ace=False, pdfjs=True, fancy_dmg=False)
     utils.print_title("Building .app via pyinstaller")
-    call_tox('pyinstaller', '-r')
+    call_tox('pyinstaller-64', '-r')
     utils.print_title("Patching .app")
     patch_mac_app()
     utils.print_title("Building .dmg")
@@ -251,7 +252,7 @@ def _get_windows_python_path(x64):
         return fallback
 
 
-def build_windows():
+def build_windows(*, skip_packaging):
     """Build windows executables/setups."""
     utils.print_title("Updating 3rdparty content")
     update_3rdparty.run(nsis=True, ace=False, pdfjs=True, fancy_dmg=False)
@@ -275,12 +276,12 @@ def build_windows():
 
     utils.print_title("Running pyinstaller 32bit")
     _maybe_remove(out_32)
-    call_tox('pyinstaller32', '-r', python=python_x86)
+    call_tox('pyinstaller-32', '-r', python=python_x86)
     shutil.move(out_pyinstaller, out_32)
 
     utils.print_title("Running pyinstaller 64bit")
     _maybe_remove(out_64)
-    call_tox('pyinstaller', '-r', python=python_x64)
+    call_tox('pyinstaller-64', '-r', python=python_x64)
     shutil.move(out_pyinstaller, out_64)
 
     utils.print_title("Running 32bit smoke test")
@@ -288,6 +289,14 @@ def build_windows():
     utils.print_title("Running 64bit smoke test")
     smoke_test(os.path.join(out_64, 'qutebrowser.exe'))
 
+    if not skip_packaging:
+        artifacts += _package_windows(out_32, out_64)
+
+    return artifacts
+
+
+def _package_windows(out_32, out_64):
+    """Build installers/zips for Windows."""
     utils.print_title("Building installers")
     subprocess.run(['makensis.exe',
                     '/DVERSION={}'.format(qutebrowser.__version__),
@@ -300,7 +309,7 @@ def build_windows():
     name_32 = 'qutebrowser-{}-win32.exe'.format(qutebrowser.__version__)
     name_64 = 'qutebrowser-{}-amd64.exe'.format(qutebrowser.__version__)
 
-    artifacts += [
+    artifacts = [
         (os.path.join('dist', name_32),
          'application/vnd.microsoft.portable-executable',
          'Windows 32bit installer'),
@@ -310,16 +319,17 @@ def build_windows():
     ]
 
     utils.print_title("Zipping 32bit standalone...")
-    name = 'qutebrowser-{}-windows-standalone-win32'.format(
-        qutebrowser.__version__)
+    template = 'qutebrowser-{}-windows-standalone-{}'
+    name = os.path.join('dist',
+                        template.format(qutebrowser.__version__, 'win32'))
     shutil.make_archive(name, 'zip', 'dist', os.path.basename(out_32))
     artifacts.append(('{}.zip'.format(name),
                       'application/zip',
                       'Windows 32bit standalone'))
 
     utils.print_title("Zipping 64bit standalone...")
-    name = 'qutebrowser-{}-windows-standalone-amd64'.format(
-        qutebrowser.__version__)
+    name = os.path.join('dist',
+                        template.format(qutebrowser.__version__, 'amd64'))
     shutil.make_archive(name, 'zip', 'dist', os.path.basename(out_64))
     artifacts.append(('{}.zip'.format(name),
                       'application/zip',
@@ -456,12 +466,16 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--no-asciidoc', action='store_true',
                         help="Don't generate docs")
-    parser.add_argument('--asciidoc', help="Full path to python and "
-                        "asciidoc.py. If not given, it's searched in PATH.",
-                        nargs=2, required=False,
-                        metavar=('PYTHON', 'ASCIIDOC'))
+    parser.add_argument('--asciidoc', help="Full path to asciidoc.py. "
+                        "If not given, it's searched in PATH.",
+                        nargs='?')
+    parser.add_argument('--asciidoc-python', help="Python to use for asciidoc."
+                        "If not given, the current Python interpreter is used.",
+                        nargs='?')
     parser.add_argument('--upload', action='store_true', required=False,
-                        help="Toggle to upload the release to GitHub")
+                        help="Toggle to upload the release to GitHub.")
+    parser.add_argument('--skip-packaging', action='store_true', required=False,
+                        help="Skip Windows installer/zip generation.")
     args = parser.parse_args()
     utils.change_cwd()
 
@@ -483,7 +497,7 @@ def main():
         run_asciidoc2html(args)
 
     if os.name == 'nt':
-        artifacts = build_windows()
+        artifacts = build_windows(skip_packaging=args.skip_packaging)
     elif sys.platform == 'darwin':
         artifacts = build_mac()
     else:

@@ -30,11 +30,10 @@ import collections
 import enum
 import datetime
 import getpass
-import typing
 import functools
+from typing import Mapping, Optional, Sequence, Tuple, cast
 
 import attr
-import pkg_resources
 from PyQt5.QtCore import PYQT_VERSION_STR, QLibraryInfo
 from PyQt5.QtNetwork import QSslSocket
 from PyQt5.QtGui import (QOpenGLContext, QOpenGLVersionProfile,
@@ -58,25 +57,60 @@ except ImportError:  # pragma: no cover
     webenginesettings = None  # type: ignore[assignment]
 
 
+_LOGO = r'''
+         ______     ,,
+    ,.-"`      | ,-` |
+  .^           ||    |
+ /    ,-*^|    ||    |
+;    /    |    ||    ;-*```^*.
+;   ;     |    |;,-*`         \
+|   |     |  ,-*`    ,-"""\    \
+|    \   ,-"`    ,-^`|     \    |
+ \    `^^    ,-;|    |     ;    |
+  *;     ,-*`  ||    |     /   ;;
+    `^^`` |    ||    |   ,^    /
+          |    ||    `^^`    ,^
+          |  _,"|        _,-"
+          -*`   ****"""``
+
+'''
+
+
 @attr.s
 class DistributionInfo:
 
     """Information about the running distribution."""
 
-    id = attr.ib()  # type: typing.Optional[str]
-    parsed = attr.ib()  # type: Distribution
-    version = attr.ib()  # type: typing.Optional[typing.Tuple[str, ...]]
-    pretty = attr.ib()  # type: str
+    id: Optional[str] = attr.ib()
+    parsed: 'Distribution' = attr.ib()
+    version: Optional[utils.VersionNumber] = attr.ib()
+    pretty: str = attr.ib()
 
 
 pastebin_url = None
-Distribution = enum.Enum(
-    'Distribution', ['unknown', 'ubuntu', 'debian', 'void', 'arch',
-                     'gentoo', 'fedora', 'opensuse', 'linuxmint', 'manjaro',
-                     'kde_flatpak'])
 
 
-def distribution() -> typing.Optional[DistributionInfo]:
+class Distribution(enum.Enum):
+
+    """A known Linux distribution.
+
+    Usually lines up with ID=... in /etc/os-release.
+    """
+
+    unknown = enum.auto()
+    ubuntu = enum.auto()
+    debian = enum.auto()
+    void = enum.auto()
+    arch = enum.auto()
+    gentoo = enum.auto()  # includes funtoo
+    fedora = enum.auto()
+    opensuse = enum.auto()
+    linuxmint = enum.auto()
+    manjaro = enum.auto()
+    kde_flatpak = enum.auto()  # org.kde.Platform
+
+
+def distribution() -> Optional[DistributionInfo]:
     """Get some information about the running Linux distribution.
 
     Returns:
@@ -104,9 +138,8 @@ def distribution() -> typing.Optional[DistributionInfo]:
     assert pretty is not None
 
     if 'VERSION_ID' in info:
-        dist_version = pkg_resources.parse_version(
-            info['VERSION_ID']
-        )  # type: typing.Optional[typing.Tuple[str, ...]]
+        version_id = info['VERSION_ID']
+        dist_version: Optional[utils.VersionNumber] = utils.parse_version(version_id)
     else:
         dist_version = None
 
@@ -135,7 +168,7 @@ def is_sandboxed() -> bool:
     return current_distro.parsed == Distribution.kde_flatpak
 
 
-def _git_str() -> typing.Optional[str]:
+def _git_str() -> Optional[str]:
     """Try to find out git version.
 
     Return:
@@ -161,7 +194,15 @@ def _git_str() -> typing.Optional[str]:
         return None
 
 
-def _git_str_subprocess(gitpath: str) -> typing.Optional[str]:
+def _call_git(gitpath: str, *args: str) -> str:
+    """Call a git subprocess."""
+    return subprocess.run(
+        ['git'] + list(args),
+        cwd=gitpath, check=True,
+        stdout=subprocess.PIPE).stdout.decode('UTF-8').strip()
+
+
+def _git_str_subprocess(gitpath: str) -> Optional[str]:
     """Try to get the git commit ID and timestamp by calling git.
 
     Args:
@@ -174,20 +215,16 @@ def _git_str_subprocess(gitpath: str) -> typing.Optional[str]:
         return None
     try:
         # https://stackoverflow.com/questions/21017300/21017394#21017394
-        commit_hash = subprocess.run(
-            ['git', 'describe', '--match=NeVeRmAtCh', '--always', '--dirty'],
-            cwd=gitpath, check=True,
-            stdout=subprocess.PIPE).stdout.decode('UTF-8').strip()
-        date = subprocess.run(
-            ['git', 'show', '-s', '--format=%ci', 'HEAD'],
-            cwd=gitpath, check=True,
-            stdout=subprocess.PIPE).stdout.decode('UTF-8').strip()
-        return '{} ({})'.format(commit_hash, date)
+        commit_hash = _call_git(gitpath, 'describe', '--match=NeVeRmAtCh',
+                                '--always', '--dirty')
+        date = _call_git(gitpath, 'show', '-s', '--format=%ci', 'HEAD')
+        branch = _call_git(gitpath, 'rev-parse', '--abbrev-ref', 'HEAD')
+        return '{} on {} ({})'.format(commit_hash, branch, date)
     except (subprocess.CalledProcessError, OSError):
         return None
 
 
-def _release_info() -> typing.Sequence[typing.Tuple[str, str]]:
+def _release_info() -> Sequence[Tuple[str, str]]:
     """Try to gather distribution release information.
 
     Return:
@@ -211,30 +248,29 @@ def _release_info() -> typing.Sequence[typing.Tuple[str, str]]:
     return data
 
 
-def _module_versions() -> typing.Sequence[str]:
+def _module_versions() -> Sequence[str]:
     """Get versions of optional modules.
 
     Return:
         A list of lines with version info.
     """
     lines = []
-    modules = collections.OrderedDict([
+    modules: Mapping[str, Sequence[str]] = collections.OrderedDict([
         ('sip', ['SIP_VERSION_STR']),
         ('colorama', ['VERSION', '__version__']),
         ('pypeg2', ['__version__']),
         ('jinja2', ['__version__']),
         ('pygments', ['__version__']),
         ('yaml', ['__version__']),
-        ('cssutils', ['__version__']),
         ('attr', ['__version__']),
         ('PyQt5.QtWebEngineWidgets', []),
         ('PyQt5.QtWebEngine', ['PYQT_WEBENGINE_VERSION_STR']),
         ('PyQt5.QtWebKitWidgets', []),
-    ])  # type: typing.Mapping[str, typing.Sequence[str]]
+    ])
     for modname, attributes in modules.items():
         try:
             module = importlib.import_module(modname)
-        except ImportError:
+        except (ImportError, ValueError):
             text = '{}: no'.format(modname)
         else:
             for name in attributes:
@@ -250,7 +286,7 @@ def _module_versions() -> typing.Sequence[str]:
     return lines
 
 
-def _path_info() -> typing.Mapping[str, str]:
+def _path_info() -> Mapping[str, str]:
     """Get info about important path names.
 
     Return:
@@ -269,7 +305,7 @@ def _path_info() -> typing.Mapping[str, str]:
     return info
 
 
-def _os_info() -> typing.Sequence[str]:
+def _os_info() -> Sequence[str]:
     """Get operating system info.
 
     Return:
@@ -313,16 +349,14 @@ def _pdfjs_version() -> str:
     else:
         pdfjs_file = pdfjs_file.decode('utf-8')
         version_re = re.compile(
-            r"^ *(PDFJS\.version|var pdfjsVersion) = '([^']+)';$",
+            r"^ *(PDFJS\.version|(var|const) pdfjsVersion) = '(?P<version>[^']+)';$",
             re.MULTILINE)
 
         match = version_re.search(pdfjs_file)
-        if not match:
-            pdfjs_version = 'unknown'
-        else:
-            pdfjs_version = match.group(2)
+        pdfjs_version = 'unknown' if not match else match.group('version')
         if file_path is None:
             file_path = 'bundled'
+
         return '{} ({})'.format(pdfjs_version, file_path)
 
 
@@ -334,49 +368,52 @@ def _chromium_version() -> str:
 
     Quick reference:
 
-    Qt 5.7:  Chromium 49
-             49.0.2623.111 (2016-03-31)
-             5.7.1: Security fixes up to 54.0.2840.87 (2016-11-01)
-
-    Qt 5.8:  Chromium 53
-             53.0.2785.148 (2016-08-31)
-             5.8.0: Security fixes up to 55.0.2883.75 (2016-12-01)
-
-    Qt 5.9:  Chromium 56
-    (LTS)    56.0.2924.122 (2017-01-25)
-             5.9.9: Security fixes up to 78.0.3904.108 (2019-11-18)
-
-    Qt 5.10: Chromium 61
-             61.0.3163.140 (2017-09-05)
-             5.10.1: Security fixes up to 64.0.3282.140 (2018-02-01)
-
-    Qt 5.11: Chromium 65
-             65.0.3325.151 (.1: .230) (2018-03-06)
-             5.11.3: Security fixes up to 70.0.3538.102 (2018-11-09)
-
     Qt 5.12: Chromium 69
-    (LTS)    69.0.3497.113 (2018-09-27)
+    (LTS)    69.0.3497.128 (~2018-09-11)
+             5.12.0: Security fixes up to 70.0.3538.102 (~2018-10-24)
+             5.12.1: Security fixes up to 71.0.3578.94  (2018-12-12)
+             5.12.2: Security fixes up to 72.0.3626.121 (2019-03-01)
+             5.12.3: Security fixes up to 73.0.3683.75  (2019-03-12)
+             5.12.4: Security fixes up to 74.0.3729.157 (2019-05-14)
+             5.12.5: Security fixes up to 76.0.3809.87  (2019-07-30)
+             5.12.6: Security fixes up to 77.0.3865.120 (~2019-09-10)
+             5.12.7: Security fixes up to 79.0.3945.130 (2020-01-16)
              5.12.8: Security fixes up to 80.0.3987.149 (2020-03-18)
+             5.12.9: Security fixes up to 83.0.4103.97  (2020-06-03)
+             5.12.10: Security fixes up to 86.0.4240.75 (2020-10-06)
 
     Qt 5.13: Chromium 73
              73.0.3683.105 (~2019-02-28)
+             5.13.0: Security fixes up to 74.0.3729.157 (2019-05-14)
+             5.13.1: Security fixes up to 76.0.3809.87  (2019-07-30)
              5.13.2: Security fixes up to 77.0.3865.120 (2019-10-10)
 
     Qt 5.14: Chromium 77
              77.0.3865.129 (~2019-10-10)
+             5.14.0: Security fixes up to 77.0.3865.129 (~2019-09-10)
+             5.14.1: Security fixes up to 79.0.3945.117 (2020-01-07)
              5.14.2: Security fixes up to 80.0.3987.132 (2020-03-03)
 
     Qt 5.15: Chromium 80
              80.0.3987.163 (2020-04-02)
              5.15.0: Security fixes up to 81.0.4044.138 (2020-05-05)
+             5.15.1: Security fixes up to 85.0.4183.83  (2020-08-25)
 
-    Also see https://www.chromium.org/developers/calendar
-    and https://chromereleases.googleblog.com/
+             5.15.2: Updated to 83.0.4103.122           (~2020-06-24)
+                     Security fixes up to 86.0.4240.183 (2020-11-02)
+
+    Also see:
+
+    - https://chromiumdash.appspot.com/schedule
+    - https://www.chromium.org/developers/calendar
+    - https://chromereleases.googleblog.com/
     """
     if webenginesettings is None:
         return 'unavailable'  # type: ignore[unreachable]
 
     if webenginesettings.parsed_user_agent is None:
+        if 'avoid-chromium-init' in objects.debug_flags:
+            return 'avoided'
         webenginesettings.init_user_agent()
         assert webenginesettings.parsed_user_agent is not None
 
@@ -387,10 +424,11 @@ def _backend() -> str:
     """Get the backend line with relevant information."""
     if objects.backend == usertypes.Backend.QtWebKit:
         return 'new QtWebKit (WebKit {})'.format(qWebKitVersion())
-    else:
+    elif objects.backend == usertypes.Backend.QtWebEngine:
         webengine = usertypes.Backend.QtWebEngine
         assert objects.backend == webengine, objects.backend
         return 'QtWebEngine (Chromium {})'.format(_chromium_version())
+    raise utils.Unreachable(objects.backend)
 
 
 def _uptime() -> datetime.timedelta:
@@ -412,9 +450,11 @@ def _config_py_loaded() -> str:
         return "no config.py was loaded"
 
 
-def version() -> str:
+def version_info() -> str:
     """Return a string with various version information."""
-    lines = ["qutebrowser v{}".format(qutebrowser.__version__)]
+    lines = _LOGO.lstrip('\n').splitlines()
+
+    lines.append("qutebrowser v{}".format(qutebrowser.__version__))
     gitver = _git_str()
     if gitver is not None:
         lines.append("Git commit: {}".format(gitver))
@@ -494,21 +534,21 @@ class OpenGLInfo:
     """Information about the OpenGL setup in use."""
 
     # If we're using OpenGL ES. If so, no further information is available.
-    gles = attr.ib(False)  # type: bool
+    gles: bool = attr.ib(False)
 
     # The name of the vendor. Examples:
     # - nouveau
     # - "Intel Open Source Technology Center", "Intel", "Intel Inc."
-    vendor = attr.ib(None)  # type: typing.Optional[str]
+    vendor: Optional[str] = attr.ib(None)
 
     # The OpenGL version as a string. See tests for examples.
-    version_str = attr.ib(None)  # type: typing.Optional[str]
+    version_str: Optional[str] = attr.ib(None)
 
     # The parsed version as a (major, minor) tuple of ints
-    version = attr.ib(None)  # type: typing.Optional[typing.Tuple[int, ...]]
+    version: Optional[Tuple[int, ...]] = attr.ib(None)
 
     # The vendor specific information following the version number
-    vendor_specific = attr.ib(None)  # type: typing.Optional[str]
+    vendor_specific: Optional[str] = attr.ib(None)
 
     def __str__(self) -> str:
         if self.gles:
@@ -517,6 +557,16 @@ class OpenGLInfo:
 
     @classmethod
     def parse(cls, *, vendor: str, version: str) -> 'OpenGLInfo':
+        """Parse OpenGL version info from a string.
+
+        The arguments should be the strings returned by OpenGL for GL_VENDOR
+        and GL_VERSION, respectively.
+
+        According to the OpenGL reference, the version string should have the
+        following format:
+
+        <major>.<minor>[.<release>] <vendor-specific info>
+        """
         if ' ' not in version:
             log.misc.warning("Failed to parse OpenGL version (missing space): "
                              "{}".format(version))
@@ -536,7 +586,7 @@ class OpenGLInfo:
 
 
 @functools.lru_cache(maxsize=1)
-def opengl_info() -> typing.Optional[OpenGLInfo]:  # pragma: no cover
+def opengl_info() -> Optional[OpenGLInfo]:  # pragma: no cover
     """Get the OpenGL vendor used.
 
     This returns a string such as 'nouveau' or
@@ -554,8 +604,7 @@ def opengl_info() -> typing.Optional[OpenGLInfo]:  # pragma: no cover
         vendor, version = override.split(', ', maxsplit=1)
         return OpenGLInfo.parse(vendor=vendor, version=version)
 
-    old_context = typing.cast(typing.Optional[QOpenGLContext],
-                              QOpenGLContext.currentContext())
+    old_context = cast(Optional[QOpenGLContext], QOpenGLContext.currentContext())
     old_surface = None if old_context is None else old_context.surface()
 
     surface = QOffscreenSurface()
@@ -636,5 +685,5 @@ def pastebin_version(pbclient: pastebin.PastebinClient = None) -> None:
 
     pbclient.paste(getpass.getuser(),
                    "qute version info {}".format(qutebrowser.__version__),
-                   version(),
+                   version_info(),
                    private=True)

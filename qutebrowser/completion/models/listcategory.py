@@ -20,19 +20,14 @@
 """Completion category that uses a list of tuples as a data source."""
 
 import re
-import typing
+from typing import Iterable, Tuple
 
-from PyQt5.QtCore import Qt, QSortFilterProxyModel, QRegExp
+from PyQt5.QtCore import QSortFilterProxyModel, QRegularExpression
 from PyQt5.QtGui import QStandardItem, QStandardItemModel
 from PyQt5.QtWidgets import QWidget
 
 from qutebrowser.completion.models import util
 from qutebrowser.utils import qtutils, log
-
-
-_ItemType = typing.Union[typing.Tuple[str],
-                         typing.Tuple[str, str],
-                         typing.Tuple[str, str, str]]
 
 
 class ListCategory(QSortFilterProxyModel):
@@ -41,7 +36,7 @@ class ListCategory(QSortFilterProxyModel):
 
     def __init__(self,
                  name: str,
-                 items: typing.Iterable[_ItemType],
+                 items: Iterable[Tuple[str, ...]],
                  sort: bool = True,
                  delete_func: util.DeleteFuncType = None,
                  parent: QWidget = None):
@@ -68,8 +63,9 @@ class ListCategory(QSortFilterProxyModel):
         val = re.sub(r' +', r' ', val)  # See #1919
         val = re.escape(val)
         val = val.replace(r'\ ', '.*')
-        rx = QRegExp(val, Qt.CaseInsensitive)
-        self.setFilterRegExp(rx)
+        rx = QRegularExpression(val, QRegularExpression.CaseInsensitiveOption)
+        qtutils.ensure_valid(rx)
+        self.setFilterRegularExpression(rx)
         self.invalidate()
         sortcol = 0
         self.sort(sortcol)

@@ -25,11 +25,11 @@ import sys
 import json
 import atexit
 import shutil
-import typing
 import argparse
 import tokenize
 import functools
 import subprocess
+from typing import Iterable, Mapping, MutableSequence, Sequence, cast
 
 from PyQt5.QtCore import QObject, pyqtSignal, QTimer
 from PyQt5.QtWidgets import QApplication
@@ -40,14 +40,13 @@ except ImportError:
 
 import qutebrowser
 from qutebrowser.api import cmdutils
-from qutebrowser.config import config
 from qutebrowser.utils import log
 from qutebrowser.misc import sessions, ipc, objects
 from qutebrowser.mainwindow import prompt
 from qutebrowser.completion.models import miscmodels
 
 
-instance = typing.cast('Quitter', None)
+instance = cast('Quitter', None)
 
 
 class Quitter(QObject):
@@ -98,10 +97,10 @@ class Quitter(QObject):
                         compile(f.read(), fn, 'exec')
 
     def _get_restart_args(
-            self, pages: typing.Iterable[str] = (),
+            self, pages: Iterable[str] = (),
             session: str = None,
-            override_args: typing.Mapping[str, str] = None
-    ) -> typing.Sequence[str]:
+            override_args: Mapping[str, str] = None
+    ) -> Sequence[str]:
         """Get args to relaunch qutebrowser.
 
         Args:
@@ -121,7 +120,7 @@ class Quitter(QObject):
             args = [sys.executable, '-m', 'qutebrowser']
 
         # Add all open pages so they get reopened.
-        page_args = []  # type: typing.MutableSequence[str]
+        page_args: MutableSequence[str] = []
         for win in pages:
             page_args.extend(win)
             page_args.append('')
@@ -158,9 +157,9 @@ class Quitter(QObject):
 
         return args
 
-    def restart(self, pages: typing.Sequence[str] = (),
+    def restart(self, pages: Sequence[str] = (),
                 session: str = None,
-                override_args: typing.Mapping[str, str] = None) -> bool:
+                override_args: Mapping[str, str] = None) -> bool:
         """Inner logic to restart qutebrowser.
 
         The "better" way to restart is to pass a session (_restart usually) as
@@ -221,15 +220,8 @@ class Quitter(QObject):
         self._is_shutting_down = True
         log.destroy.debug("Shutting down with status {}, session {}...".format(
             status, session))
-        if sessions.session_manager is not None:
-            if session is not None:
-                sessions.session_manager.save(session,
-                                              last_window=last_window,
-                                              load_next_time=True)
-            elif config.val.auto_save.session:
-                sessions.session_manager.save(sessions.default,
-                                              last_window=last_window,
-                                              load_next_time=True)
+
+        sessions.shutdown(session, last_window=last_window)
 
         if prompt.prompt_queue.shutdown():
             # If shutdown was called while we were asking a question, we're in

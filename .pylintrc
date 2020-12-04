@@ -59,7 +59,7 @@ docstring-min-length=3
 no-docstring-rgx=(^_|^main$)
 
 [FORMAT]
-max-line-length=79
+max-line-length=88
 ignore-long-lines=(<?https?://|file://|^# Copyright 201\d|link:)
 expected-line-ending-format=LF
 
@@ -74,7 +74,7 @@ valid-metaclass-classmethod-first-arg=cls
 
 [TYPECHECK]
 ignored-modules=PyQt5,PyQt5.QtWebKit
-ignored-classes=DummyBox
+ignored-classes=DummyBox,__cause__
 
 [IMPORTS]
 known-third-party=sip

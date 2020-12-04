@@ -99,6 +99,21 @@ def test_toggle(caret, selection, qtbot):
     assert selection.toggle() == browsertab.SelectionState.none
 
 
+def test_selection_callback_wrong_mode(qtbot, caplog,
+                                       webengine_tab, mode_manager):
+    """Test what calling the selection callback outside of caret mode.
+
+    It should be ignored, as something could have left caret mode while the
+    async callback was happening, so we don't want to mess with the status bar.
+    """
+    assert mode_manager.mode == usertypes.KeyMode.normal
+    with qtbot.assertNotEmitted(webengine_tab.caret.selection_toggled):
+        webengine_tab.caret._toggle_sel_translate('normal')
+
+    msg = 'Ignoring caret selection callback in KeyMode.normal'
+    assert caplog.messages == [msg]
+
+
 class TestDocument:
 
     def test_selecting_entire_document(self, caret, selection):
@@ -309,9 +324,6 @@ def test_drop_selection(caret, selection):
 
 class TestSearch:
 
-    # https://bugreports.qt.io/browse/QTBUG-60673
-
-    @pytest.mark.qtbug60673
     @pytest.mark.no_xvfb
     def test_yanking_a_searched_line(self, caret, selection, mode_manager, web_tab, qtbot):
         mode_manager.leave(usertypes.KeyMode.caret)
@@ -324,7 +336,6 @@ class TestSearch:
         caret.move_to_end_of_line()
         selection.check('five six')
 
-    @pytest.mark.qtbug60673
     @pytest.mark.no_xvfb
     def test_yanking_a_searched_line_with_multiple_matches(self, caret, selection, mode_manager, web_tab, qtbot):
         mode_manager.leave(usertypes.KeyMode.caret)

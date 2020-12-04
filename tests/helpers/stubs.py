@@ -481,9 +481,10 @@ class TabbedBrowserStub(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.widget = TabWidgetStub()
-        self.shutting_down = False
+        self.is_shutting_down = False
         self.loaded_url = None
         self.cur_url = None
+        self.undo_stack = None
 
     def on_tab_close_requested(self, idx):
         del self.widget.tabs[idx]
@@ -657,6 +658,9 @@ class FakeHintManager:
     def handle_partial_key(self, keystr):
         self.keystr = keystr
 
+    def current_mode(self):
+        return 'letter'
+
 
 class FakeWebEngineProfile:
 
@@ -666,8 +670,8 @@ class FakeWebEngineProfile:
 
 class FakeCookieStore:
 
-    def __init__(self, has_cookie_filter):
+    def __init__(self):
         self.cookie_filter = None
-        if has_cookie_filter:
-            self.setCookieFilter = (
-                lambda func: setattr(self, 'cookie_filter', func))  # noqa
+
+    def setCookieFilter(self, func):
+        self.cookie_filter = func

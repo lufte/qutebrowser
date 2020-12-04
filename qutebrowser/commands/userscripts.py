@@ -22,7 +22,7 @@
 import os
 import os.path
 import tempfile
-import typing
+from typing import cast, Any, MutableMapping, Tuple
 
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QObject, QSocketNotifier
 
@@ -60,7 +60,7 @@ class _QtFIFOReader(QObject):
         fd = os.open(filepath, os.O_RDWR | os.O_NONBLOCK)
         # pylint: enable=no-member,useless-suppression
         self._fifo = os.fdopen(fd, 'r')
-        self._notifier = QSocketNotifier(typing.cast(sip.voidptr, fd),
+        self._notifier = QSocketNotifier(cast(sip.voidptr, fd),
                                          QSocketNotifier.Read, self)
         self._notifier.activated.connect(  # type: ignore[attr-defined]
             self.read_line)
@@ -117,10 +117,10 @@ class _BaseUserscriptRunner(QObject):
         self._cleaned_up = False
         self._filepath = None
         self._proc = None
-        self._env = {}  # type: typing.MutableMapping[str, str]
+        self._env: MutableMapping[str, str] = {}
         self._text_stored = False
         self._html_stored = False
-        self._args = ()  # type: typing.Tuple[typing.Any, ...]
+        self._args: Tuple[Any, ...] = ()
         self._kwargs = {}
 
     def store_text(self, text):
@@ -259,14 +259,15 @@ class _POSIXUserscriptRunner(_BaseUserscriptRunner):
             self._filepath = tempfile.mktemp(prefix='qutebrowser-userscript-',
                                              dir=standarddir.runtime())
             # pylint: disable=no-member,useless-suppression
-            os.mkfifo(self._filepath)
+            os.mkfifo(self._filepath, mode=0o600)
             # pylint: enable=no-member,useless-suppression
         except OSError as e:
+            self._filepath = None  # Make sure it's not used
             message.error("Error while creating FIFO: {}".format(e))
             return
 
         self._reader = _QtFIFOReader(self._filepath)
-        self._reader.got_line.connect(self.got_cmd)  # type: ignore[arg-type]
+        self._reader.got_line.connect(self.got_cmd)
 
     @pyqtSlot()
     def on_proc_finished(self):
@@ -394,6 +395,7 @@ def _lookup_path(cmd):
     directories = [
         os.path.join(standarddir.data(), "userscripts"),
         os.path.join(standarddir.data(system=True), "userscripts"),
+        os.path.join(standarddir.config(), "userscripts"),
     ]
     for directory in directories:
         cmd_path = os.path.join(directory, cmd)
@@ -425,7 +427,7 @@ def run_async(tab, cmd, *args, win_id, env, verbose=False,
     commandrunner = runners.CommandRunner(win_id, parent=tb)
 
     if utils.is_posix:
-        runner = _POSIXUserscriptRunner(tb)  # type: _BaseUserscriptRunner
+        runner: _BaseUserscriptRunner = _POSIXUserscriptRunner(tb)
     elif utils.is_windows:  # pragma: no cover
         runner = _WindowsUserscriptRunner(tb)
     else:  # pragma: no cover

@@ -22,7 +22,7 @@
 import os
 import html
 import netrc
-import typing
+from typing import Callable, Mapping
 
 from PyQt5.QtCore import QUrl
 
@@ -75,15 +75,14 @@ def authentication_required(url, authenticator, abort_on):
     return answer
 
 
-def javascript_confirm(url, js_msg, abort_on, *, escape_msg=True):
+def javascript_confirm(url, js_msg, abort_on):
     """Display a javascript confirm prompt."""
     log.js.debug("confirm: {}".format(js_msg))
     if config.val.content.javascript.modal_dialog:
         raise CallSuper
 
-    js_msg = html.escape(js_msg) if escape_msg else js_msg
     msg = 'From <b>{}</b>:<br/>{}'.format(html.escape(url.toDisplayString()),
-                                          js_msg)
+                                          html.escape(js_msg))
     urlstr = url.toString(QUrl.RemovePassword | QUrl.FullyEncoded)
     ans = message.ask('Javascript confirm', msg,
                       mode=usertypes.PromptMode.yesno,
@@ -91,7 +90,7 @@ def javascript_confirm(url, js_msg, abort_on, *, escape_msg=True):
     return bool(ans)
 
 
-def javascript_prompt(url, js_msg, default, abort_on, *, escape_msg=True):
+def javascript_prompt(url, js_msg, default, abort_on):
     """Display a javascript prompt."""
     log.js.debug("prompt: {}".format(js_msg))
     if config.val.content.javascript.modal_dialog:
@@ -99,9 +98,8 @@ def javascript_prompt(url, js_msg, default, abort_on, *, escape_msg=True):
     if not config.val.content.javascript.prompt:
         return (False, "")
 
-    js_msg = html.escape(js_msg) if escape_msg else js_msg
     msg = '<b>{}</b> asks:<br/>{}'.format(html.escape(url.toDisplayString()),
-                                          js_msg)
+                                          html.escape(js_msg))
     urlstr = url.toString(QUrl.RemovePassword | QUrl.FullyEncoded)
     answer = message.ask('Javascript prompt', msg,
                          mode=usertypes.PromptMode.text,
@@ -114,7 +112,7 @@ def javascript_prompt(url, js_msg, default, abort_on, *, escape_msg=True):
         return (True, answer)
 
 
-def javascript_alert(url, js_msg, abort_on, *, escape_msg=True):
+def javascript_alert(url, js_msg, abort_on):
     """Display a javascript alert."""
     log.js.debug("alert: {}".format(js_msg))
     if config.val.content.javascript.modal_dialog:
@@ -123,9 +121,8 @@ def javascript_alert(url, js_msg, abort_on, *, escape_msg=True):
     if not config.val.content.javascript.alert:
         return
 
-    js_msg = html.escape(js_msg) if escape_msg else js_msg
     msg = 'From <b>{}</b>:<br/>{}'.format(html.escape(url.toDisplayString()),
-                                          js_msg)
+                                          html.escape(js_msg))
     urlstr = url.toString(QUrl.RemovePassword | QUrl.FullyEncoded)
     message.ask('Javascript alert', msg, mode=usertypes.PromptMode.alert,
                 abort_on=abort_on, url=urlstr)
@@ -133,13 +130,13 @@ def javascript_alert(url, js_msg, abort_on, *, escape_msg=True):
 
 # Needs to line up with the values allowed for the
 # content.javascript.log setting.
-_JS_LOGMAP = {
+_JS_LOGMAP: Mapping[str, Callable[[str], None]] = {
     'none': lambda arg: None,
     'debug': log.js.debug,
     'info': log.js.info,
     'warning': log.js.warning,
     'error': log.js.error,
-}  # type: typing.Mapping[str, typing.Callable[[str], None]]
+}
 
 
 def javascript_log_message(level, source, line, msg):
@@ -160,7 +157,7 @@ def ignore_certificate_errors(url, errors, abort_on):
         True if the error should be ignored, False otherwise.
     """
     ssl_strict = config.instance.get('content.ssl_strict', url=url)
-    log.webview.debug("Certificate errors {!r}, strict {}".format(
+    log.network.debug("Certificate errors {!r}, strict {}".format(
         errors, ssl_strict))
 
     for error in errors:
@@ -186,7 +183,7 @@ def ignore_certificate_errors(url, errors, abort_on):
             ignore = False
         return ignore
     elif ssl_strict is False:
-        log.webview.debug("ssl_strict is False, only warning about errors")
+        log.network.debug("ssl_strict is False, only warning about errors")
         for err in errors:
             # FIXME we might want to use warn here (non-fatal error)
             # https://github.com/qutebrowser/qutebrowser/issues/114
@@ -285,8 +282,11 @@ def get_user_stylesheet(searching=False):
         with open(filename, 'r', encoding='utf-8') as f:
             css += f.read()
 
-    if (config.val.scrolling.bar == 'never' or
-            config.val.scrolling.bar == 'when-searching' and not searching):
+    setting = config.val.scrolling.bar
+    if setting == 'overlay' and not utils.is_mac:
+        setting = 'when-searching'
+
+    if setting == 'never' or setting == 'when-searching' and not searching:
         css += '\nhtml > ::-webkit-scrollbar { width: 0px; height: 0px; }'
 
     return css
