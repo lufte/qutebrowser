@@ -35,6 +35,8 @@ Major changes
   at the time of writing, it's recommended to
   https://github.com/qutebrowser/qutebrowser/blob/master/doc/install.asciidoc#installing-qutebrowser-with-virtualenv[install qutebrowser in a virtualenv]
   with a newer version of Qt/PyQt.
+- New optional dependency on the Python `adblock` library, which is now used to
+  integrate Brave's Rust adblocker library, if the `adblock` module is available.
 - Windows 7 is not supported anymore by the Windows binaries.
 - The (formerly optional) `cssutils` dependency is now removed. It was only
   needed for improved behavior in corner cases when using `:download --mhtml`
@@ -42,6 +44,12 @@ Major changes
   still relying on it. The `cssutils` project is also dead upstream, with its
   repository being gone after Bitbucket
   https://bitbucket.org/blog/sunsetting-mercurial-support-in-bitbucket[removed Mercurial support].
+- TODO: The former dependency on the `pkg_resources` module (part of the
+  `setuptools` project) got dropped.
+- A new dependency on the `importlib_resources` module got introduced for
+  Python versions up to and including 3.8. Note that the stdlib
+  `importlib.resources` module for Python 3.7 and 3.8 is missing the needed APIs,
+  thus requiring the backports for those versions as well.
 
 Removed
 ~~~~~~~
@@ -60,6 +68,11 @@ Removed
 Added
 ~~~~~
 
+- New settings for the ABP-based adblocker:
+   * `content.blocking.method` to decide which blocker(s) should be used.
+   * `content.blocking.adblock.lists` to configure ABP-like lists to use.
+- New `qt.environ` setting which makes it easier to set/unset environment
+  variables for qutebrowser.
 - When QtWebEngine has been updated but PyQtWebEngine hasn't yet, the dark mode
   settings might stop working. As a (currently undocumented) escape hatch, this
   version adds a `QUTE_DARKMODE_VARIANT=qt_515_2` environment variable which can
@@ -70,6 +83,8 @@ Added
 - New userscripts:
   - `kodi` to play videos in Kodi
   - `qr` to generate a QR code of the current URL
+  - `add-nextcloud-bookmarks` to create bookmarks in Nextcloud's Bookmarks app
+  - `add-nextcloud-cookbook` to add recipes to Nextcloud's Cookbook app
 
 Changed
 ~~~~~~~
@@ -97,16 +112,50 @@ Changed
   `greasemonkey` subdirectories of e.g. `~/.config/qutebrowser/`) rather than only
   the data directory (the same subdirectories of e.g.
   `~/.local/share/qutebrowser/`).
+- The `:later` command now understands a time specification like `5m` or
+  `1h5m2s`, rather than just taking milliseconds.
+- The `importer.py` script doesn't use a browser argument anymore; instead its
+  `--input-format` switch can be used to configure the input format. The help also
+  was expanded to explain how to use it properly.
+- If `tabs.tabs_are_windows` is set, the `tabs.last_close` setting is now
+  ignored and the window is always closed when using `:close` (`d`).
+- Various host-blocking settings have been renamed to accomodate the new ABP-like
+  adblocker:
+    * `content.host_blocking.enabled` -> `content.blocking.enabled` (controlling both blockers)
+    * `content.host_blocking.whitelist` -> `content.blocking.whitelist` (controlling both blockers)
+    * `content.host_blocking.lists` -> `content.blocking.hosts.lists`
+- With the (default) QtWebEngine backend, if a custom `accept` header is set via
+  `content.headers.custom`, the custom value is now ignored for XHR
+  (`XMLHttpRequest`) requests. Instead, the sent value is now `*/*` or the header
+  set from JavaScript, as it would be if `content.headers.custom` wasn't set.
+- The `:buffer` completion now shows the underlying renderer process PID if
+  doing so is supported (QtWebEngine 5.15).
 
 Fixed
 ~~~~~
 
 - With interpolated color settings (`colors.tabs.indicator.*` and
   `colors.downloads.*`), the alpha channel is now handled correctly.
-- The `format_json` userscript now uses `env` in its shebang, making it work
-  correctly on systems where `bash` isn't located in `/bin`.
+- Fixes to userscripts:
+    * `format_json` now uses `env` in its shebang, making it work
+      correctly on systems where `bash` isn't located in `/bin`.
+    * `qute-pass` now handles the MIME output format introduced in gopass 1.10.0.
+    * `qute-lastpass` now types multiple `<` or `>` characters correctly.
+- The `:undo` completion now sorts its entries correctly (by the numerical index
+  rather than lexicographically).
+- The `completion.web_history.ignore` setting now works properly when set in
+  `config.py` (rather than via `:set`). Additionally, a `:config-source` will not
+  result in a history rebuild if the value wasn't actually changed.
+- When downloading a `data:` URL, the suggested filename is now improved and
+  contains a proper extension. Before this fix, qutebrowser would use the URL's
+  data contents as filename with QtWebEngine; or "binary blob" with the Qt network
+  stack.
+- TODO: Due to a long-standing bug in the `pkg_resources` dependency, it caused
+  qutebrowser's startup to slow down by around 150ms-1s (heavily depending on
+  the system). Since the dependency is now removed, qutebrowser's startup time
+  thus improved.
 
-v1.14.1 (unreleased)
+v1.14.1 (2020-12-04)
 --------------------
 
 Added
@@ -200,6 +249,9 @@ Fixed
 - Due to changes in the underlying Chromium, the
   `colors.webpage.prefers_color_scheme_dark` setting broke with Qt 5.15.2. It now
   works properly again.
+- A bug in the `pkg_resources` module used by qutebrowser caused deprecation
+  warnings to appear on start with Python 3.9 on some setups. Those are now
+  hidden.
 - Minor performance improvements.
 - Fix for various functionality breaking in private windows with v1.14.0,
   after the last private window is closed. This includes:

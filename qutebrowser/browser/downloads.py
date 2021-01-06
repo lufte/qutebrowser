@@ -548,12 +548,10 @@ class AbstractDownloadItem(QObject):
             position: The color type requested, can be 'fg' or 'bg'.
         """
         assert position in ["fg", "bg"]
-        # pylint: disable=bad-config-option
         start = getattr(config.val.colors.downloads.start, position)
         stop = getattr(config.val.colors.downloads.stop, position)
         system = getattr(config.val.colors.downloads.system, position)
         error = getattr(config.val.colors.downloads.error, position)
-        # pylint: enable=bad-config-option
         if self.error_msg is not None:
             assert not self.successful
             return error
@@ -1291,7 +1289,7 @@ class TempDownloadManager:
 
     """Manager to handle temporary download files.
 
-    The downloads are downloaded to a temporary location and then openened with
+    The downloads are downloaded to a temporary location and then opened with
     the system standard application. The temporary files are deleted when
     qutebrowser is shutdown.
 

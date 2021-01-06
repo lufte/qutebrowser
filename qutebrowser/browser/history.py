@@ -79,7 +79,7 @@ class CompletionMetaInfo(sql.SqlTable):
     """Table containing meta-information for the completion."""
 
     KEYS = {
-        'force_rebuild': False,
+        'excluded_patterns': '',
     }
 
     def __init__(self, parent=None):
@@ -88,6 +88,9 @@ class CompletionMetaInfo(sql.SqlTable):
         for key, default in self.KEYS.items():
             if key not in self:
                 self[key] = default
+
+        # force_rebuild is not in use anymore
+        self.delete('key', 'force_rebuild', optional=True)
 
     def _check_key(self, key):
         if key not in self.KEYS:
@@ -157,19 +160,22 @@ class WebHistory(sql.SqlTable):
         self._progress = progress
         # Store the last saved url to avoid duplicate immediate saves.
         self._last_url = None
+        self.metainfo = CompletionMetaInfo(parent=self)
 
         drop_completion = False
 
         if sql.Query('pragma user_version').run().value() < _USER_VERSION:
             drop_completion = True
 
-        self.metainfo = CompletionMetaInfo(parent=self)
-        self.completion = CompletionHistory(parent=self,
-                                            drop=drop_completion)
-        if self.metainfo['force_rebuild']:
-            self.metainfo['force_rebuild'] = False
-            if not drop_completion:
-                self.completion.delete_all()
+        # Get a string of all patterns
+        patterns = config.instance.get_str('completion.web_history.exclude')
+
+        # If patterns changed, update them in database and rebuild completion
+        if self.metainfo['excluded_patterns'] != patterns:
+            self.metainfo['excluded_patterns'] = patterns
+            drop_completion = True
+
+        self.completion = CompletionHistory(parent=self, drop=drop_completion)
 
         if not self.completion:
             # either the table is out-of-date or the user wiped it manually
@@ -192,18 +198,11 @@ class WebHistory(sql.SqlTable):
                                        'ORDER BY atime desc '
                                        'limit :limit offset :offset')
 
-        config.instance.changed.connect(self._on_config_changed)
-
     def __repr__(self):
         return utils.get_repr(self, length=len(self))
 
     def __contains__(self, url):
         return self._contains_query.run(val=url).value()
-
-    @config.change_filter('completion.web_history.frecency_bonus',
-                          'completion.web_history.exclude')
-    def _on_config_changed(self):
-        self.metainfo['force_rebuild'] = True
 
     @contextlib.contextmanager
     def _handle_sql_errors(self):
